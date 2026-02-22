@@ -62,3 +62,18 @@ def test_comment_api_logged_in(client):
     assert rv.status_code == 200
     data = rv.get_json()
     assert data['comment']['user_name'] == 'admin'
+
+def test_add_empty_comment(client):
+    with app.app_context():
+        animal = Animal(name="TestCat", current_sector="NBS")
+        db.session.add(animal)
+        db.session.commit()
+        animal_id = animal.id
+
+    rv = client.post(f'/api/animal/{animal_id}/comments', json={'content': ''})
+    assert rv.status_code == 400
+    assert b'Content is required' in rv.data
+
+def test_add_comment_invalid_animal(client):
+    rv = client.post('/api/animal/999/comments', json={'content': 'Ghost comment'})
+    assert rv.status_code == 404

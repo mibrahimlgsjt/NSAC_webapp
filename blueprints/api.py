@@ -237,6 +237,11 @@ def get_comments(animal_id):
 
 @api_bp.route('/animal/<int:animal_id>/comments', methods=['POST'])
 def add_comment(animal_id):
+    # Check if animal exists
+    animal = db.session.get(Animal, animal_id)
+    if not animal:
+        return jsonify(error="Animal not found"), 404
+
     data = request.json
     content = data.get('content')
     if not content:

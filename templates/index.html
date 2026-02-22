@@ -16,6 +16,7 @@
             .then(res => res.json())
             .then(data => {
                 this.$dispatch('liked-' + id, data.likes);
+                this.$dispatch('toast', { message: 'Liked! ❤️', type: 'success' });
             });
     },
     doubleTapLike(id) {
@@ -65,10 +66,12 @@
             const data = await res.json();
             if (data.success) {
                 this.activeComments.unshift(data.comment);
+                this.$dispatch('toast', { message: 'Comment posted! 💬', type: 'success' });
             }
         } catch (e) {
             console.error(e);
             this.newComment = commentText; // Revert on error
+            this.$dispatch('toast', { message: 'Failed to post comment', type: 'error' });
         }
     }
 }">
