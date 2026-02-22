@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, session, redirect, url_for, current_app
 from flask_login import current_user, login_required
 from models import db, Animal, FeedingLog, MedicalLog, InventoryItem, EmergencyReport, Sighting
-from datetime import datetime
+from datetime import datetime, timezone
 from utils.image_handler import save_image
 from extensions import cache, vote_bloom
 
@@ -16,7 +16,7 @@ def vote_tag(animal_id):
     if vote_key in vote_bloom:
         return jsonify(error="You already voted for this today! 🐾", karma=0), 403
         
-    animal = Animal.query.get_or_404(animal_id)
+    animal = db.get_or_404(Animal, animal_id)
     tags = animal.personality_tags.split(',') if animal.personality_tags else []
     
     if tag not in tags:
@@ -29,7 +29,7 @@ def vote_tag(animal_id):
 
 @api_bp.route('/like/<int:animal_id>', methods=['POST'])
 def like_animal(animal_id):
-    animal = Animal.query.get_or_404(animal_id)
+    animal = db.get_or_404(Animal, animal_id)
     animal.likes += 1
     db.session.commit()
     return jsonify(likes=animal.likes)
@@ -44,13 +44,13 @@ def feed_animal():
         volunteer_name=current_user.username,
         location_sector=sector,
         round_number=int(data.get('round', 1)),
-        timestamp=datetime.utcnow()
+        timestamp=datetime.now(timezone.utc)
     )
     
     # Update last_fed for all animals in this sector
     animals_in_sector = Animal.query.filter_by(current_sector=sector).all()
     for animal in animals_in_sector:
-        animal.last_fed = datetime.utcnow()
+        animal.last_fed = datetime.now(timezone.utc)
         
     db.session.add(new_log)
     db.session.commit()
@@ -66,7 +66,7 @@ def add_medical_log():
         rescuer_name=data.get('rescuer_name'),
         clinic_name=data.get('clinic_name'),
         cost=float(data.get('cost', 0)),
-        date=datetime.utcnow()
+        date=datetime.now(timezone.utc)
     )
     
     release_date_str = data.get('release_date')
@@ -83,7 +83,7 @@ def update_inventory():
     data = request.form
     item_id = data.get('item_id')
     if item_id:
-        item = InventoryItem.query.get(item_id)
+        item = db.session.get(InventoryItem, item_id)
     else:
         item = InventoryItem()
         db.session.add(item)
@@ -112,7 +112,7 @@ def submit_report():
 @api_bp.route('/resolve_report/<int:report_id>', methods=['POST'])
 @login_required
 def resolve_report(report_id):
-    report = EmergencyReport.query.get_or_404(report_id)
+    report = db.get_or_404(EmergencyReport, report_id)
     report.status = "Resolved"
     db.session.commit()
     return jsonify(success=True)
@@ -142,7 +142,7 @@ def add_animal():
 def delete_animal(animal_id):
     if current_user.role != 'admin':
         return jsonify(error="Admins only"), 403
-    animal = Animal.query.get_or_404(animal_id)
+    animal = db.get_or_404(Animal, animal_id)
     db.session.delete(animal)
     db.session.commit()
     return redirect(url_for('admin.panel'))
@@ -173,13 +173,13 @@ def upload_sighting():
         location_sector=location,
         user_submitted_image=image_path,
         blur_hash=blur_hash,
-        timestamp=datetime.utcnow(),
+        timestamp=datetime.now(timezone.utc),
         uploader_id=session.get('user_id', 'anonymous'),
         likes=0
     )
     
     # Update animal's current location based on this latest sighting
-    animal = Animal.query.get(animal_id)
+    animal = db.session.get(Animal, animal_id)
     if animal:
         animal.current_sector = location
     
@@ -190,7 +190,7 @@ def upload_sighting():
 
 @api_bp.route('/sighting/<int:sighting_id>/like', methods=['POST'])
 def like_sighting(sighting_id):
-    sighting = Sighting.query.get_or_404(sighting_id)
+    sighting = db.get_or_404(Sighting, sighting_id)
     sighting.likes += 1
     db.session.commit()
     return jsonify(likes=sighting.likes, success=True)

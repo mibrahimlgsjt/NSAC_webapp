@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request
 from models import Animal, Sighting, FeedingLog, db
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 public_bp = Blueprint('public', __name__)
 
@@ -8,7 +8,7 @@ public_bp = Blueprint('public', __name__)
 def index():
     animals = Animal.query.all()
     # Check feeding status for last 4 hours
-    four_hours_ago = datetime.utcnow() - timedelta(hours=4)
+    four_hours_ago = datetime.now(timezone.utc) - timedelta(hours=4)
     
     # Updated NUST Hotspots based on Guide_MAP1.pdf
     sectors = [
@@ -36,7 +36,7 @@ def index():
 
 @public_bp.route('/animal/<int:animal_id>')
 def animal_detail(animal_id):
-    animal = Animal.query.get_or_404(animal_id)
+    animal = db.get_or_404(Animal, animal_id)
     recent_sighting = Sighting.query.filter_by(animal_id=animal.id).order_by(Sighting.timestamp.desc()).first()
     return render_template('animal_detail.html', animal=animal, sighting=recent_sighting)
 
