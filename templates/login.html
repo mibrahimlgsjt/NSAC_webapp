@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="flex items-center justify-center min-h-[70vh]">
+    <div class="bg-white/40 backdrop-blur-xl border border-white/50 p-10 rounded-[3rem] shadow-2xl w-full max-w-md">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-black text-digital-lavender mb-2">Admin Login 🔐</h1>
+            <p class="text-gray-500 font-bold">NSAC Volunteers Only</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="mb-6 p-4 rounded-2xl bg-red-100 text-red-600 font-bold text-center border border-red-200">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('auth.login') }}" class="space-y-6">
+            <div>
+                <label class="block text-gray-500 font-bold mb-2 ml-4">Username</label>
+                <input type="text" name="username" class="w-full bg-white/60 border-0 rounded-full py-4 px-6 text-lg font-bold text-gray-700 focus:ring-4 focus:ring-digital-lavender/50 transition shadow-inner" placeholder="Enter username" required autofocus>
+            </div>
+
+            <div>
+                <label class="block text-gray-500 font-bold mb-2 ml-4">Password</label>
+                <input type="password" name="password" class="w-full bg-white/60 border-0 rounded-full py-4 px-6 text-lg font-bold text-gray-700 focus:ring-4 focus:ring-digital-lavender/50 transition shadow-inner" placeholder="Enter PIN" required>
+            </div>
+
+            <div class="flex items-center justify-between ml-4 mr-4">
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="checkbox" name="remember" class="form-checkbox text-digital-lavender w-5 h-5 rounded-md border-gray-300 focus:ring-digital-lavender">
+                    <span class="text-gray-500 font-bold text-sm">Remember me</span>
+                </label>
+            </div>
+
+            <button type="submit" class="w-full bg-gradient-to-r from-digital-lavender to-purple-500 text-white font-black py-4 rounded-full shadow-lg shadow-purple-200 hover:shadow-xl hover:scale-105 transition transform active:scale-95 text-xl">
+                Unlock Access
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

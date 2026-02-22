@@ -1,0 +1,330 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-md mx-auto pb-24" x-data="{ 
+    selectedSector: 'All',
+    showBottomSheet: false,
+    activeSectorDetails: {},
+    likeAnimal(id) {
+        fetch('/api/like/' + id, {method: 'POST'})
+            .then(res => res.json())
+            .then(data => {
+                this.$dispatch('liked-' + id, data.likes);
+            });
+    },
+    doubleTapLike(id) {
+        this.likeAnimal(id);
+        const heart = document.getElementById('big-heart-' + id);
+        heart.classList.remove('hidden');
+        heart.classList.add('animate-ping');
+        setTimeout(() => {
+            heart.classList.add('hidden');
+            heart.classList.remove('animate-ping');
+        }, 500);
+    },
+    openSector(sector) {
+        this.activeSectorDetails = {
+            name: sector,
+            fed: feedingStatus[sector] ? 'Recently Fed 🌿' : 'Hungry 🐾',
+            animals: [] // Would ideally fetch from API or filter local list
+        };
+        this.showBottomSheet = true;
+    }
+}">
+
+    <!-- Header (Instagram Style) -->
+    <header class="flex justify-between items-center py-4 px-2 sticky top-0 z-40 glass-strong rounded-b-[2rem] mb-6">
+        <h1 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-digital-lavender to-purple-600 tracking-tighter">
+            Campus Companions
+        </h1>
+        <div class="flex space-x-4 text-2xl">
+            <span class="cursor-pointer hover:scale-110 transition">❤️</span>
+            <span class="cursor-pointer hover:scale-110 transition">💬</span>
+        </div>
+    </header>
+
+    <!-- Map Section (Leaflet) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <div id="map" class="h-64 w-full rounded-[2.5rem] shadow-xl mb-6 z-0 border-4 border-white"></div>
+
+    <!-- Stories Tray (Filter) -->
+    <section class="mb-8 overflow-x-auto hide-scrollbar pb-2">
+        <div class="flex space-x-4 px-2">
+            <div @click="selectedSector = 'All'" class="flex flex-col items-center space-y-1 min-w-[70px] cursor-pointer">
+                <div class="w-16 h-16 rounded-full p-[3px] transition transform hover:scale-105" :class="selectedSector === 'All' ? 'bg-gradient-to-tr from-yellow-400 to-fuchsia-600' : 'bg-gray-200'">
+                    <div class="w-full h-full rounded-full bg-white flex items-center justify-center text-2xl border-2 border-white">🏠</div>
+                </div>
+                <span class="text-[10px] font-bold" :class="selectedSector === 'All' ? 'text-gray-900' : 'text-gray-400'">All</span>
+            </div>
+
+            {% for sector, is_fed in feeding_status.items() %}
+            <div @click="selectedSector = '{{ sector }}'" class="flex flex-col items-center space-y-1 min-w-[70px] cursor-pointer">
+                <div class="w-16 h-16 rounded-full p-[3px] transition transform hover:scale-105" :class="selectedSector === '{{ sector }}' ? 'bg-gradient-to-tr from-yellow-400 to-fuchsia-600' : ({{ 'true' if is_fed else 'false' }} ? 'bg-neo-mint' : 'bg-gray-200')">
+                    <div class="w-full h-full rounded-full bg-white flex items-center justify-center text-2xl border-2 border-white">
+                        {{ '🌿' if is_fed else '🐾' }}
+                    </div>
+                </div>
+                <span class="text-[10px] font-bold text-center leading-tight" :class="selectedSector === '{{ sector }}' ? 'text-gray-900' : 'text-gray-400'">{{ sector }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <script>
+        var feedingStatus = {{ feeding_status | tojson }};
+        document.addEventListener('DOMContentLoaded', function() {
+            var map = L.map('map', {
+                center: [33.6425, 72.9930],
+                zoom: 15,
+                zoomControl: false,
+                attributionControl: false
+            });
+            
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                subdomains: 'abcd',
+                maxZoom: 20
+            }).addTo(map);
+
+            // Geolocation
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    var userLoc = [position.coords.latitude, position.coords.longitude];
+                    L.circle(userLoc, {radius: 50, color: '#A89ACD', fillOpacity: 0.5}).addTo(map);
+                    map.setView(userLoc, 16);
+                });
+            }
+
+            var sectors = {
+                "Concordia 1": [33.6430, 72.9900],
+                "Concordia 2": [33.6450, 72.9950],
+                "NBS": [33.6410, 72.9880],
+                "SEECS": [33.6400, 72.9980],
+                "SADA": [33.6480, 72.9920],
+                "SMME": [33.6460, 72.9850],
+                "Retro Cafe": [33.6420, 72.9910],
+                "Margalla Cafe": [33.6470, 72.9890],
+                "Sports Complex": [33.6390, 72.9950]
+            };
+
+            for (var sector in sectors) {
+                (function(s) {
+                    var coords = sectors[s];
+                    var isFed = feedingStatus[s];
+                    var color = isFed ? '#A8E6CF' : '#FF6F61';
+                    
+                    var icon = L.divIcon({
+                        className: 'custom-div-icon',
+                        html: `<div style="background-color: ${color}; width: 24px; height: 24px; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; font-size: 10px;">${isFed ? '🌿' : ''}</div>`,
+                        iconSize: [24, 24],
+                        iconAnchor: [12, 12]
+                    });
+
+                    L.marker(coords, {icon: icon}).addTo(map).on('click', function() {
+                        // Access Alpine data from outside
+                        const el = document.querySelector('[x-data]');
+                        el.__x.$data.openSector(s);
+                    });
+                })(sector);
+            }
+        });
+    </script>
+
+    <!-- The Feed (Vertical Scroll with Filtering) -->
+    <section class="space-y-8" x-data="{ 
+        storyOpen: false, 
+        activeStory: null,
+        openStory(animal) {
+            this.activeStory = animal;
+            this.storyOpen = true;
+        },
+        spawnHeart(e) {
+            const container = $refs.heartContainer;
+            const heart = document.createElement('div');
+            heart.innerHTML = '❤️';
+            heart.className = 'absolute bottom-0 text-2xl pointer-events-none transition-all duration-[1000ms] ease-out';
+            const startX = Math.random() * 40 - 20; // Random offset
+            heart.style.left = `calc(50% + ${startX}px)`;
+            heart.style.opacity = '1';
+            heart.style.transform = 'translateY(0) scale(1)';
+            container.appendChild(heart);
+            
+            requestAnimationFrame(() => {
+                const up = 200 + Math.random() * 200;
+                const side = Math.random() * 100 - 50;
+                heart.style.transform = `translate(${side}px, -${up}px) scale(2) rotate(${side}deg)`;
+                heart.style.opacity = '0';
+            });
+            setTimeout(() => heart.remove(), 1000);
+        }
+    }">
+        {% for animal in animals %}
+                <article class="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden relative transition-all duration-200 ease-out transform perspective-1000" 
+                         x-show="selectedSector === 'All' || selectedSector === '{{ animal.current_sector }}'"
+                         x-transition
+                         x-data="{ tiltX: 0, tiltY: 0 }"
+                         x-on:mousemove="
+                            const rect = $el.getBoundingClientRect();
+                            const x = $event.clientX - rect.left;
+                            const y = $event.clientY - rect.top;
+                            tiltX = (y - rect.height / 2) / 20;
+                            tiltY = -(x - rect.width / 2) / 20;
+                         "
+                         x-on:mouseleave="tiltX = 0; tiltY = 0"
+                         :style="`transform: perspective(1000px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale(1.02)`">            
+            <!-- Post Header -->
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-digital-lavender to-blue-200 p-[2px]">
+                        <img src="{{ animal.image_url }}" class="w-full h-full rounded-full object-cover border-2 border-white">
+                    </div>
+                    <div>
+                        <a href="{{ url_for('public.animal_detail', animal_id=animal.id) }}" class="font-bold text-gray-800 text-sm hover:underline">{{ animal.name }}</a>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wide">{{ animal.current_sector }} • {{ animal.mood_badge }}</p>
+                    </div>
+                </div>
+                <button class="text-gray-400 hover:text-gray-600 font-bold tracking-widest text-lg">•••</button>
+            </div>
+
+            <!-- Post Image (Double Tap Area & Story Trigger) -->
+            <div class="relative w-full aspect-[4/5] bg-gray-100 group cursor-pointer" 
+                 @click="openStory({name: '{{ animal.name }}', img: '{{ animal.image_url }}', likes: {{ animal.likes }}, id: {{ animal.id }}})"
+                 @dblclick.stop="doubleTapLike({{ animal.id }})">
+                <img src="{{ animal.image_url }}" alt="{{ animal.name }}" class="w-full h-full object-cover">
+                
+                <!-- Big Heart Animation -->
+                <div id="big-heart-{{ animal.id }}" class="absolute inset-0 flex items-center justify-center hidden pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-32 w-32 text-white drop-shadow-2xl fill-current opacity-90" viewBox="0 0 24 24">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                </div>
+
+                <!-- Sponsor Tag (Shop Style) -->
+                {% if animal.sponsor_name %}
+                <div class="absolute bottom-4 left-4 bg-black/50 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1.5 rounded-full flex items-center space-x-1">
+                    <span>👑</span>
+                    <span>Sponsored by {{ animal.sponsor_name }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Action Bar -->
+            <div class="p-4 pb-2">
+                <div class="flex justify-between items-center text-2xl mb-3">
+                    <div class="flex space-x-5 text-gray-700">
+                        <button @click="likeAnimal({{ animal.id }})" class="hover:text-red-500 transition transform active:scale-90">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                        </button>
+                        <button class="hover:text-blue-500 transition transform active:scale-90">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                            </svg>
+                        </button>
+                    </div>
+                    <button class="text-gray-700 hover:text-yellow-500 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Likes Count -->
+                <div class="text-sm font-black text-gray-800 mb-2" x-data="{ count: {{ animal.likes }} }" @liked-{{ animal.id }}.window="count = $event.detail">
+                    <span x-text="count"></span> likes
+                </div>
+
+                <!-- Caption -->
+                <div class="text-sm text-gray-700 leading-relaxed mb-2">
+                    <span class="font-black mr-1">{{ animal.name }}</span>
+                    <span>{{ animal.history or 'Just chilling on campus 🐾' }}</span>
+                </div>
+                
+                <div class="text-[10px] text-gray-400 uppercase font-bold">
+                    {{ range(1, 23) | random }} HOURS AGO
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+
+        <!-- Story Viewer Overlay (TikTok Style) -->
+        <div x-show="storyOpen" 
+             x-data="{ touchStartY: 0, touchEndY: 0 }"
+             @touchstart="touchStartY = $event.changedTouches[0].screenY"
+             @touchend="touchEndY = $event.changedTouches[0].screenY; if(touchEndY - touchStartY > 50) storyOpen = false"
+             x-transition:enter="transition ease-out duration-300" 
+             x-transition:enter-start="opacity-0 scale-90 translate-y-full" 
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-200" 
+             x-transition:leave-start="opacity-100 scale-100" 
+             x-transition:leave-end="opacity-0 scale-90 translate-y-full"
+             class="fixed inset-0 z-[100] bg-black text-white flex flex-col" style="display: none;">
+            
+            <!-- Progress Bar -->
+            <div class="absolute top-2 left-2 right-2 flex space-x-1 z-20">
+                <div class="h-1 bg-white/30 flex-1 rounded-full overflow-hidden">
+                    <div class="h-full bg-white animate-[load_5s_linear]" :class="{'paused': false}"></div>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="flex-1 relative bg-gray-900" @click="storyOpen = false">
+                <img :src="activeStory?.img" class="w-full h-full object-cover opacity-90">
+                <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60"></div>
+                
+                <!-- Heart Container for Particles -->
+                <div x-ref="heartContainer" class="absolute inset-0 overflow-hidden pointer-events-none"></div>
+
+                <!-- Info Overlay -->
+                <div class="absolute bottom-20 left-4 right-4 text-left">
+                    <h2 class="text-2xl font-black mb-1" x-text="activeStory?.name"></h2>
+                    <p class="text-sm font-medium opacity-80">Spotted at NUST Campus</p>
+                </div>
+
+                <!-- Floating Actions -->
+                <div class="absolute bottom-20 right-4 flex flex-col space-y-6 items-center">
+                    <button @click.stop="spawnHeart($event)" class="flex flex-col items-center space-y-1 group">
+                        <div class="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-2xl group-active:scale-125 transition">❤️</div>
+                        <span class="text-xs font-bold" x-text="activeStory?.likes"></span>
+                    </button>
+                    <button class="flex flex-col items-center space-y-1">
+                        <div class="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-2xl">💬</div>
+                        <span class="text-xs font-bold">Reply</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Bottom Reply Input -->
+            <div class="p-4 bg-black/80 backdrop-blur-md border-t border-white/10 flex items-center space-x-3">
+                <input type="text" placeholder="Send a message..." class="flex-1 bg-white/10 rounded-full px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-white">
+                <button class="text-2xl" @click="spawnHeart($event)">🔥</button>
+                <button class="text-2xl" @click="spawnHeart($event)">😍</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bottom Sheet Modal (Alpine) -->
+    <div x-show="showBottomSheet" class="fixed inset-0 z-[60] flex items-end justify-center" style="display: none;">
+        <div @click="showBottomSheet = false" x-show="showBottomSheet" x-transition.opacity class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+        <div x-show="showBottomSheet" x-transition:enter="transition ease-out duration-300 transform" x-transition:enter-start="translate-y-full" x-transition:enter-end="translate-y-0" x-transition:leave="transition ease-in duration-200 transform" x-transition:leave-start="translate-y-0" x-transition:leave-end="translate-y-full" class="relative bg-white w-full max-w-md rounded-t-[3rem] p-8 shadow-2xl border-t-4 border-digital-lavender">
+            <div class="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6"></div>
+            <h2 class="text-3xl font-black text-digital-lavender mb-2" x-text="activeSectorDetails.name"></h2>
+            <p class="font-bold mb-6" :class="activeSectorDetails.fed.includes('Fed') ? 'text-neo-mint' : 'text-hyper-coral'" x-text="activeSectorDetails.fed"></p>
+            
+            <div class="space-y-4">
+                <button @click="selectedSector = activeSectorDetails.name; showBottomSheet = false" class="w-full bg-digital-lavender text-white font-black py-4 rounded-2xl shadow-lg transform active:scale-95 transition">
+                    View Animals in this Sector
+                </button>
+                <button @click="showBottomSheet = false" class="w-full bg-gray-100 text-gray-500 font-bold py-4 rounded-2xl">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</div>
+{% endblock %}

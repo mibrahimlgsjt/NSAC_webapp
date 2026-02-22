@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NSAC Campus Companions</title>
+    <!-- PWA -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#A89ACD">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/sw.js')
+                    .then(reg => console.log('SW Registered!', reg))
+                    .catch(err => console.log('SW Fail!', err));
+            });
+        }
+    </script>
+    <!-- Google Fonts: Quicksand (Rounder than Nunito) -->
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('app', {
+                theme: localStorage.getItem('theme') || (new Date().getHours() > 18 || new Date().getHours() < 6 ? 'dark' : 'light'),
+                toggleTheme() {
+                    this.theme = this.theme === 'light' ? 'dark' : 'light';
+                    localStorage.setItem('theme', this.theme);
+                }
+            })
+        })
+    </script>
+    <style>
+        :root {
+            --bg-color: #F3F0FF;
+            --text-primary: #374151;
+            --text-secondary: #6b7280;
+            --card-bg: rgba(255, 255, 255, 0.4);
+            --card-border: rgba(255, 255, 255, 0.4);
+            --accent-primary: #A89ACD;
+            --glass-strong: rgba(255, 255, 255, 0.6);
+            --text-glow: none;
+            
+            /* Secondary Colors */
+            --color-neo-mint: #A8E6CF;
+            --color-hyper-coral: #FF6F61;
+            --color-soft-butter: #F4E99B;
+        }
+
+        .theme-dark {
+            --bg-color: #1a1a2e; /* Deep Midnight */
+            --text-primary: #e2e8f0;
+            --text-secondary: #cbd5e1;
+            --card-bg: rgba(30, 41, 59, 0.5); /* Darker Frost */
+            --card-border: rgba(255, 255, 255, 0.1);
+            --accent-primary: #c084fc; /* Neon Purple */
+            --glass-strong: rgba(26, 26, 46, 0.9);
+            --text-glow: 0 0 10px rgba(192, 132, 252, 0.4);
+            
+            /* Secondary Colors (Neon Adjustments) */
+            --color-neo-mint: #4ade80; 
+            --color-hyper-coral: #fb7185;
+            --color-soft-butter: #facc15;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Quicksand', sans-serif;
+            overflow-x: hidden;
+            transition: background-color 0.5s ease, color 0.5s ease;
+            text-shadow: var(--text-glow);
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color); 
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: var(--accent-primary); 
+            border-radius: 20px;
+            border: 3px solid var(--bg-color);
+        }
+
+        /* Glassmorphism utility */
+        .glass {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .glass-strong {
+            background: var(--glass-strong);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 2px solid var(--card-border);
+        }
+
+        /* Animated Background Blobs */
+        .bg-blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.6;
+            z-index: -1;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'lavender-wash': 'var(--bg-color)',
+                        'digital-lavender': 'var(--accent-primary)',
+                        'neo-mint': 'var(--color-neo-mint)',
+                        'hyper-coral': 'var(--color-hyper-coral)',
+                        'soft-butter': 'var(--color-soft-butter)',
+                    },
+                    // ... existing config ...
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen text-gray-700 pb-24 md:pb-10 relative selection:bg-digital-lavender selection:text-white"
+      x-data
+      :class="{ 'theme-dark': $store.app.theme === 'dark' }">
+
+    <!-- Theme Toggle -->
+    <button @click="$store.app.toggleTheme()" class="fixed top-6 right-6 z-[60] bg-white/20 backdrop-blur-md p-3 rounded-full shadow-lg border border-white/30 hover:scale-110 transition group">
+        <span x-show="$store.app.theme === 'light'" class="text-xl">🌙</span>
+        <span x-show="$store.app.theme === 'dark'" class="text-xl">☀️</span>
+    </button>
+
+    <!-- Ambient Background Animation -->
+    <div class="bg-blob bg-purple-300 w-96 h-96 top-0 left-0 animate-blob mix-blend-multiply"></div>
+    <div class="bg-blob bg-yellow-200 w-96 h-96 top-0 right-0 animate-blob animation-delay-2000 mix-blend-multiply"></div>
+    <div class="bg-blob bg-pink-200 w-96 h-96 -bottom-32 left-20 animate-blob animation-delay-4000 mix-blend-multiply"></div>
+
+    <!-- Navigation (Mobile Bottom Bar) -->
+    <nav class="fixed bottom-4 left-4 right-4 z-50 glass-strong rounded-3xl p-2 shadow-2xl flex justify-around items-center md:hidden border border-white/50">
+        <a href="/" class="flex flex-col items-center p-2 rounded-2xl {{ 'text-digital-lavender bg-white' if request.path == '/' else 'text-gray-400 hover:text-gray-600' }} transition-all duration-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+        </a>
+        <a href="/report" class="flex flex-col items-center justify-center bg-hyper-coral text-white rounded-2xl h-12 w-12 shadow-lg hover:bg-red-500 transition transform hover:scale-110 -mt-8 border-4 border-[#F3F0FF]">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+        </a>
+        <a href="/admin" class="flex flex-col items-center p-2 rounded-2xl {{ 'text-digital-lavender bg-white' if '/admin' in request.path else 'text-gray-400 hover:text-gray-600' }} transition-all duration-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+        </a>
+    </nav>
+
+    <!-- Desktop Nav (Floating Pill) -->
+    <nav class="hidden md:flex justify-between items-center py-4 px-8 glass-strong m-6 rounded-full sticky top-4 z-40 shadow-sm hover:shadow-md transition duration-300">
+        <a href="/" class="flex items-center space-x-2 group">
+            <span class="text-2xl transform group-hover:rotate-12 transition">🐾</span>
+            <span class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-digital-lavender to-purple-600">Campus Companions</span>
+        </a>
+        <div class="space-x-1 flex items-center bg-gray-100/50 p-1 rounded-full">
+            <a href="/" class="px-5 py-2 rounded-full font-bold text-sm transition {{ 'bg-white shadow-sm text-digital-lavender' if request.path == '/' else 'text-gray-500 hover:text-gray-700 hover:bg-white/50' }}">Home</a>
+            <a href="/admin" class="px-5 py-2 rounded-full font-bold text-sm transition {{ 'bg-white shadow-sm text-digital-lavender' if '/admin' in request.path else 'text-gray-500 hover:text-gray-700 hover:bg-white/50' }}">Admin</a>
+        </div>
+        <a href="/report" class="bg-hyper-coral text-white px-6 py-2.5 rounded-full font-bold shadow-lg hover:bg-red-500 hover:shadow-red-200 transition transform hover:-translate-y-0.5 flex items-center space-x-2">
+            <span>🚨</span>
+            <span>Emergency</span>
+        </a>
+    </nav>
+
+    <main class="p-4 md:p-8 relative z-10">
+        {% block content %}{% endblock %}
+    </main>
+
+</body>
+</html>

@@ -1,0 +1,408 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-8 relative pb-20" x-data="{ 
+    showUploadModal: false,
+    karmaMessage: '',
+    showKarma: false,
+    storyOpen: false,
+    activeStory: null,
+    toast(msg) {
+        this.karmaMessage = msg;
+        this.showKarma = true;
+        setTimeout(() => this.showKarma = false, 3000);
+    },
+    spawnHeart(e) {
+        const container = $refs.heartContainerDetail;
+        const heart = document.createElement('div');
+        heart.innerHTML = '❤️';
+        heart.className = 'absolute bottom-0 text-2xl pointer-events-none transition-all duration-[1000ms] ease-out';
+        const startX = Math.random() * 40 - 20;
+        heart.style.left = `calc(50% + ${startX}px)`;
+        heart.style.opacity = '1';
+        heart.style.transform = 'translateY(0) scale(1)';
+        container.appendChild(heart);
+        
+        requestAnimationFrame(() => {
+            const up = 200 + Math.random() * 200;
+            const side = Math.random() * 100 - 50;
+            heart.style.transform = `translate(${side}px, -${up}px) scale(2) rotate(${side}deg)`;
+            heart.style.opacity = '0';
+        });
+        setTimeout(() => heart.remove(), 1000);
+    },
+    petAnimal(e) {
+        const img = e.target;
+        img.classList.add('animate-bounce');
+        setTimeout(() => img.classList.remove('animate-bounce'), 1000);
+        
+        // Simple Particle Burst
+        for(let i=0; i<8; i++) {
+            const el = document.createElement('div');
+            el.innerHTML = ['❤️', '✨', '🐾'][Math.floor(Math.random()*3)];
+            el.style.position = 'fixed';
+            el.style.left = e.clientX + 'px';
+            el.style.top = e.clientY + 'px';
+            el.style.pointerEvents = 'none';
+            el.style.zIndex = '100';
+            el.style.fontSize = '20px';
+            el.style.transition = 'all 0.8s ease-out';
+            document.body.appendChild(el);
+            
+            requestAnimationFrame(() => {
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 50 + Math.random() * 50;
+                el.style.transform = `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist - 50}px) scale(0)`;
+                el.style.opacity = '0';
+            });
+            setTimeout(() => el.remove(), 800);
+        }
+        this.toast('You petted {{ animal.name }}! ❤️');
+    },
+    openStory(sighting) {
+        this.activeStory = sighting;
+        this.storyOpen = true;
+    }
+}">
+
+    <!-- Karma Toast -->
+    <div x-show="showKarma" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-10" x-transition:leave="transition ease-in duration-300" class="fixed top-10 left-1/2 -translate-x-1/2 z-[100] bg-white/80 backdrop-blur-xl border-2 border-digital-lavender px-8 py-4 rounded-full shadow-2xl flex items-center space-x-3 pointer-events-none">
+        <span class="text-2xl">✨</span>
+        <span class="font-black text-digital-lavender" x-text="karmaMessage"></span>
+    </div>
+
+    <!-- Hero Section (Parallax-ish) -->
+    <div class="relative rounded-[3rem] overflow-hidden shadow-2xl h-[50vh] group">
+        <img src="{{ animal.image_url }}" alt="{{ animal.name }}" class="w-full h-full object-cover transform transition duration-1000 group-hover:scale-105 cursor-pointer" @click="petAnimal($event)">
+        
+        <!-- Gradient Overlay -->
+        <div class="absolute inset-0 bg-gradient-to-t from-digital-lavender/90 via-transparent to-transparent"></div>
+        
+        <!-- Content Overlay -->
+        <div class="absolute bottom-0 left-0 right-0 p-8 md:p-12 text-white">
+            <div class="flex flex-col md:flex-row justify-between items-end">
+                <div>
+                    <h1 class="text-5xl md:text-7xl font-black mb-2 tracking-tight drop-shadow-md">{{ animal.name }}</h1>
+                    <div class="flex items-center space-x-3 text-lg font-bold opacity-90">
+                        <span class="bg-white/20 backdrop-blur-md px-4 py-1 rounded-full border border-white/30">{{ animal.current_sector }}</span>
+                        <span class="px-2">•</span>
+                        <span>{{ animal.health_status }}</span>
+                    </div>
+                </div>
+                
+                <!-- Like Action -->
+                <div class="mt-6 md:mt-0">
+                    <button @click="fetch('/api/like/{{ animal.id }}', {method: 'POST'}).then(r => r.json()).then(d => { $el.querySelector('span').innerText = d.likes; toast('+10 Karma! ❤️') })" class="bg-white text-pink-500 hover:text-white hover:bg-pink-500 p-4 rounded-full shadow-lg transition transform hover:scale-110 active:scale-95 duration-300 group-hover:rotate-12 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 fill-current" viewBox="0 0 24 24">
+                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        </svg>
+                        <span class="font-bold text-xl">{{ animal.likes }}</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Section (Tamagotchi Style) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 px-4">
+        <div class="glass p-6 rounded-[2rem] flex flex-col items-center">
+            <span class="text-xs font-black uppercase text-gray-400 mb-2">Hunger</span>
+            <div class="w-full h-4 bg-gray-100 rounded-full overflow-hidden border-2 border-white shadow-inner">
+                <div class="h-full bg-neo-mint transition-all duration-1000 shadow-[0_0_10px_rgba(168,230,207,0.5)]" style="width: {{ animal.hunger_score }}%"></div>
+            </div>
+            <span class="text-[10px] font-bold mt-1 text-gray-500">{{ 'Tummy Full' if animal.hunger_score > 70 else 'Feeling Snackish' if animal.hunger_score > 30 else 'Needs Food!' }}</span>
+        </div>
+        <div class="glass p-6 rounded-[2rem] flex flex-col items-center">
+            <span class="text-xs font-black uppercase text-gray-400 mb-2">Health</span>
+            <div class="w-full h-4 bg-gray-100 rounded-full overflow-hidden border-2 border-white shadow-inner">
+                <div class="h-full bg-hyper-coral transition-all duration-1000 shadow-[0_0_10px_rgba(255,111,97,0.5)]" style="width: {{ animal.health_score }}%"></div>
+            </div>
+            <span class="text-[10px] font-bold mt-1 text-gray-500">{{ animal.health_status }}</span>
+        </div>
+        <div class="glass p-6 rounded-[2rem] flex flex-col items-center">
+            <span class="text-xs font-black uppercase text-gray-400 mb-2">Love</span>
+            <div class="w-full h-4 bg-gray-100 rounded-full overflow-hidden border-2 border-white shadow-inner">
+                <div class="h-full bg-pink-400 transition-all duration-1000 shadow-[0_0_10px_rgba(244,114,182,0.5)]" style="width: {{ [animal.likes * 2, 100]|min }}%"></div>
+            </div>
+            <span class="text-[10px] font-bold mt-1 text-gray-500">{{ animal.likes }} Hearts</span>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10 px-4">
+        
+        <!-- Left Column: Info Cards -->
+        <div class="md:col-span-2 space-y-6">
+            
+            <!-- Bio Card -->
+            <div class="glass-strong p-8 rounded-[2.5rem] shadow-lg border-t-4 border-white/50">
+                <h2 class="text-2xl font-black text-digital-lavender mb-4 flex items-center">
+                    <span class="mr-2">📖</span> Story
+                </h2>
+                <p class="text-gray-600 text-lg leading-relaxed font-medium">
+                    {{ animal.history or 'This mysterious creature has yet to share their tale...' }}
+                </p>
+            </div>
+
+            <!-- Personality Tags -->
+            <div class="glass p-8 rounded-[2.5rem]">
+                <h3 class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Vibe Check</h3>
+                <div class="flex flex-wrap gap-2">
+                    {% for tag in (animal.personality_tags.split(',') if animal.personality_tags else []) %}
+                    <span class="bg-digital-lavender/10 text-digital-lavender px-4 py-2 rounded-full font-bold text-sm border border-digital-lavender/20">#{{ tag }}</span>
+                    {% endfor %}
+                    
+                    <!-- Vote for new tags -->
+                    <div class="w-full mt-6 pt-6 border-t border-gray-100">
+                        <p class="text-xs font-black text-gray-400 mb-3 uppercase">Describe {{ animal.name }}'s Personality:</p>
+                        <div class="flex flex-wrap gap-2">
+                            {% for option in ['Sleepyhead', 'Foodie', 'Explorer', 'Quiet', 'Playful', 'King'] %}
+                            <button @click="fetch('/api/animal/{{ animal.id }}/vote_tag', {
+                                method: 'POST',
+                                headers: {'Content-Type': 'application/json'},
+                                body: JSON.stringify({tag: '{{ option }}'})
+                            }).then(r => r.json()).then(d => {
+                                if(d.success) { toast(d.message); setTimeout(() => location.reload(), 1000); }
+                                else { toast(d.error); }
+                            })" class="bg-white hover:bg-digital-lavender hover:text-white text-gray-400 border-2 border-gray-100 hover:border-digital-lavender px-3 py-1 rounded-full text-[10px] font-black transition">
+                                + {{ option }}
+                            </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Column: Meta & Actions -->
+        <div class="space-y-6">
+            
+            <!-- Sponsor Badge (Floating) -->
+            {% if animal.sponsor_name %}
+            <div class="bg-gradient-to-br from-soft-butter/80 to-yellow-100 p-6 rounded-[2.5rem] shadow-xl border-4 border-white relative overflow-hidden group hover:scale-105 transition duration-500">
+                <div class="absolute -right-6 -top-6 bg-yellow-300 rounded-full w-24 h-24 blur-xl opacity-50"></div>
+                <div class="relative z-10 text-center">
+                    <div class="mx-auto bg-white p-3 rounded-full w-16 h-16 flex items-center justify-center shadow-md mb-3 text-2xl">
+                        👑
+                    </div>
+                    <h3 class="text-xs font-bold uppercase tracking-widest text-yellow-700 mb-1">Supported By</h3>
+                    <p class="font-black text-gray-800 text-xl">{{ animal.sponsor_name }}</p>
+                </div>
+            </div>
+            {% else %}
+            <div class="bg-gray-100 p-6 rounded-[2.5rem] border-2 border-dashed border-gray-300 text-center opacity-70 hover:opacity-100 transition cursor-pointer">
+                <p class="font-bold text-gray-400">Become a Sponsor 🌟</p>
+            </div>
+            {% endif %}
+
+            <!-- Recent Sighting -->
+            <div class="glass p-6 rounded-[2.5rem]">
+                <h3 class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Last Seen</h3>
+                {% if sighting %}
+                <div class="flex items-center space-x-4">
+                    <div class="bg-gray-200 h-14 w-14 rounded-2xl overflow-hidden shadow-inner flex-shrink-0">
+                         <img src="{{ url_for('static', filename=sighting.user_submitted_image) if sighting.user_submitted_image else 'https://placehold.co/100' }}" class="w-full h-full object-cover">
+                    </div>
+                    <div>
+                        <p class="font-bold text-gray-800 leading-tight">{{ sighting.location_sector }}</p>
+                        <p class="text-xs font-bold text-gray-500">{{ sighting.timestamp.strftime('%d %b, %H:%M') }}</p>
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-sm font-bold text-gray-400 italic">No recent sightings.</p>
+                {% endif %}
+            </div>
+
+            <!-- Upload Action -->
+            <button @click="showUploadModal = true" class="w-full bg-gradient-to-r from-digital-lavender to-purple-500 text-white font-black py-5 rounded-[2rem] shadow-lg shadow-purple-200 hover:shadow-xl hover:scale-105 transition transform active:scale-95 flex items-center justify-center space-x-2">
+                <span>📸</span>
+                <span>Upload Sighting</span>
+            </button>
+
+        </div>
+    </div>
+
+    <!-- Paparazzi Feed (Instagram Style with Infinite Scroll) -->
+    <div class="px-4 mt-12" x-data="{ 
+        sightings: [], 
+        page: 1, 
+        hasNext: true, 
+        loading: false,
+        loadMore() {
+            if (this.loading || !this.hasNext) return;
+            this.loading = true;
+            fetch(`/api/sightings/{{ animal.id }}?page=${this.page}&limit=8`)
+                .then(r => r.json())
+                .then(data => {
+                    this.sightings.push(...data.items);
+                    this.hasNext = data.has_next;
+                    this.page = data.next_page;
+                    this.loading = false;
+                    this.$nextTick(() => this.renderBlurHashes());
+                });
+        },
+        renderBlurHashes() {
+            this.sightings.forEach(s => {
+                if (s.blur_hash) {
+                    const canvas = document.getElementById(`bh-${s.id}`);
+                    if (canvas && !canvas.dataset.rendered) {
+                        const pixels = blurhash.decode(s.blur_hash, 32, 32);
+                        const ctx = canvas.getContext('2d');
+                        const imageData = ctx.createImageData(32, 32);
+                        imageData.data.set(pixels);
+                        ctx.putImageData(imageData, 0, 0);
+                        canvas.dataset.rendered = 'true';
+                    }
+                }
+            });
+        }
+    }" x-init="loadMore()">
+        <h2 class="text-3xl font-black text-digital-lavender mb-6 tracking-tight text-center">📸 Paparazzi Feed</h2>
+        
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <template x-for="s in sightings" :key="s.id">
+                <div class="group relative aspect-square rounded-[2rem] overflow-hidden shadow-md hover:shadow-xl transition duration-300 bg-gray-200 cursor-pointer" @click="openStory(s)">
+                    <!-- BlurHash Placeholder -->
+                    <canvas :id="'bh-' + s.id" class="absolute inset-0 w-full h-full" width="32" height="32"></canvas>
+                    
+                    <!-- HD Image -->
+                    <img loading="lazy" :src="s.image_url" class="absolute inset-0 w-full h-full object-cover transform transition duration-700 group-hover:scale-110 opacity-0 transition-opacity duration-500" @load="$el.classList.remove('opacity-0')">
+                    
+                    <!-- Overlay -->
+                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition duration-300 flex flex-col items-center justify-center text-white space-y-2">
+                        <p class="font-bold text-sm bg-white/20 backdrop-blur-md px-3 py-1 rounded-full border border-white/30" x-text="'📍 ' + s.location"></p>
+                        <p class="text-xs opacity-80" x-text="s.timestamp"></p>
+                        
+                        <!-- Like Button for Sighting -->
+                        <button @click.stop="fetch(`/api/sighting/${s.id}/like`, {method: 'POST'}).then(r => r.json()).then(d => s.likes = d.likes)" class="flex items-center space-x-1 hover:text-pink-400 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 fill-current" viewBox="0 0 24 24">
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                            </svg>
+                            <span class="font-bold" x-text="s.likes || 0"></span>
+                        </button>
+                    </div>
+                </div>
+            </template>
+        </div>
+        
+        <!-- Infinite Scroll Intersect Sentinel -->
+        <div x-intersect="loadMore()" class="h-10 w-full flex items-center justify-center mt-4">
+            <template x-if="loading">
+                <span class="animate-bounce text-2xl">✨</span>
+            </template>
+        </div>
+        
+        <template x-if="!hasNext && sightings.length > 0">
+            <p class="text-center py-10 opacity-50 text-xl font-bold text-gray-400">That's all the sightings for now! 🐾</p>
+        </template>
+        
+        <template x-if="!loading && sightings.length === 0">
+            <div class="text-center py-10 opacity-50">
+                <p class="text-xl font-bold text-gray-400">No sightings yet. Be the first!</p>
+            </div>
+        </template>
+    </div>
+
+    <!-- Upload Modal -->
+    <div x-show="showUploadModal" style="display: none;" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <!-- Backdrop -->
+        <div @click="showUploadModal = false" x-transition.opacity class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+        
+        <!-- Modal Content -->
+        <div x-transition.scale class="relative bg-white/90 backdrop-blur-xl w-full max-w-md p-8 rounded-[2.5rem] shadow-2xl border border-white/50">
+            <h3 class="text-2xl font-black text-gray-800 mb-4 text-center">Report Sighting 📸</h3>
+            
+            <form action="/api/sighting/upload" method="POST" enctype="multipart/form-data" class="space-y-4" @submit="setTimeout(() => showUploadModal = false, 1000)">
+                <input type="hidden" name="animal_id" value="{{ animal.id }}">
+                
+                <div>
+                    <label class="block text-sm font-bold text-gray-500 mb-1 ml-2">Location</label>
+                    <select name="location" class="w-full bg-white/50 border-0 rounded-2xl p-4 font-bold text-gray-700 focus:ring-2 focus:ring-digital-lavender">
+                        <option value="Concordia 1">Concordia 1</option>
+                        <option value="Concordia 2">Concordia 2</option>
+                        <option value="NBS">NBS</option>
+                        <option value="SEECS">SEECS</option>
+                        <option value="SADA">SADA</option>
+                        <option value="SMME">SMME</option>
+                        <option value="Retro Cafe">Retro Cafe</option>
+                        <option value="Margalla Cafe">Margalla Cafe</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-500 mb-1 ml-2">Photo</label>
+                    <input type="file" name="sighting_image" accept="image/*" required class="w-full bg-white/50 rounded-2xl p-3 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-digital-lavender file:text-white hover:file:bg-purple-600">
+                </div>
+                
+                <button type="submit" class="w-full bg-hyper-coral text-white font-black py-4 rounded-[2rem] shadow-lg hover:shadow-xl hover:scale-105 transition transform mt-4">
+                    Share Sighting
+                </button>
+            </form>
+            
+            <button @click="showUploadModal = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Story Viewer Overlay (TikTok Style) -->
+    <div x-show="storyOpen" 
+         x-data="{ touchStartY: 0, touchEndY: 0 }"
+         @touchstart="touchStartY = $event.changedTouches[0].screenY"
+         @touchend="touchEndY = $event.changedTouches[0].screenY; if(touchEndY - touchStartY > 50) storyOpen = false"
+         x-transition:enter="transition ease-out duration-300" 
+         x-transition:enter-start="opacity-0 scale-90 translate-y-full" 
+         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-200" 
+         x-transition:leave-start="opacity-100 scale-100" 
+         x-transition:leave-end="opacity-0 scale-90 translate-y-full"
+         class="fixed inset-0 z-[100] bg-black text-white flex flex-col" style="display: none;">
+        
+        <!-- Progress Bar -->
+        <div class="absolute top-2 left-2 right-2 flex space-x-1 z-20">
+            <div class="h-1 bg-white/30 flex-1 rounded-full overflow-hidden">
+                <div class="h-full bg-white animate-[load_5s_linear]" :class="{'paused': false}"></div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="flex-1 relative bg-gray-900" @click="storyOpen = false">
+            <img :src="activeStory?.img" class="w-full h-full object-cover opacity-90">
+            <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60"></div>
+            
+            <!-- Heart Container for Particles -->
+            <div x-ref="heartContainerDetail" class="absolute inset-0 overflow-hidden pointer-events-none"></div>
+
+            <!-- Info Overlay -->
+            <div class="absolute bottom-20 left-4 right-4 text-left">
+                <h2 class="text-2xl font-black mb-1" x-text="activeStory?.name"></h2>
+                <p class="text-sm font-medium opacity-80" x-text="'Spotted at ' + activeStory?.location"></p>
+                <p class="text-xs opacity-60" x-text="activeStory?.timestamp"></p>
+            </div>
+
+            <!-- Floating Actions -->
+            <div class="absolute bottom-20 right-4 flex flex-col space-y-6 items-center">
+                <button @click.stop="spawnHeart($event)" class="flex flex-col items-center space-y-1 group">
+                    <div class="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-2xl group-active:scale-125 transition">❤️</div>
+                    <span class="text-xs font-bold" x-text="activeStory?.likes"></span>
+                </button>
+                <button class="flex flex-col items-center space-y-1">
+                    <div class="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-2xl">💬</div>
+                    <span class="text-xs font-bold">Reply</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Bottom Reply Input -->
+        <div class="p-4 bg-black/80 backdrop-blur-md border-t border-white/10 flex items-center space-x-3">
+            <input type="text" placeholder="Send a message..." class="flex-1 bg-white/10 rounded-full px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-white">
+            <button class="text-2xl" @click="spawnHeart($event)">🔥</button>
+            <button class="text-2xl" @click="spawnHeart($event)">😍</button>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
