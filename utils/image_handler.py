@@ -1,6 +1,6 @@
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from PIL import Image
 from werkzeug.utils import secure_filename
 from flask import current_app
@@ -43,7 +43,7 @@ def save_image(file_storage, subfolder='sightings'):
     except IndexError:
         return None, None
         
-    unique_name = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}.{ext}"
+    unique_name = f"{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}.{ext}"
     
     # Process and Save
     try:
@@ -82,7 +82,7 @@ def save_image(file_storage, subfolder='sightings'):
 
         # Local Path (Fallback)
         # Create directory: static/uploads/{subfolder}/YYYY/MM
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         relative_path = os.path.join('uploads', subfolder, now.strftime('%Y'), now.strftime('%m'))
         full_dir_path = os.path.join(current_app.root_path, 'static', relative_path)
         

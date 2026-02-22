@@ -1,6 +1,6 @@
 from extensions import db
 from flask_login import UserMixin
-from datetime import datetime, UTC
+from datetime import datetime, timezone
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -30,9 +30,9 @@ class Animal(db.Model):
         
         last_fed_utc = self.last_fed
         if last_fed_utc.tzinfo is None:
-            last_fed_utc = last_fed_utc.replace(tzinfo=UTC)
+            last_fed_utc = last_fed_utc.replace(tzinfo=timezone.utc)
             
-        diff = datetime.now(UTC) - last_fed_utc
+        diff = datetime.now(timezone.utc) - last_fed_utc
         hours = diff.total_seconds() / 3600
         # If fed in last 4 hours, 100%. After 24 hours, 0%.
         score = max(0, 100 - (hours * 4)) 
@@ -61,7 +61,7 @@ class Sighting(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     animal_id = db.Column(db.Integer, db.ForeignKey('animal.id'), nullable=False)
     location_sector = db.Column(db.String(100), nullable=False)
-    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     user_submitted_image = db.Column(db.String(500), nullable=True)
     blur_hash = db.Column(db.String(50), nullable=True)
     uploader_id = db.Column(db.String(100), nullable=True) # For user tracking
@@ -79,7 +79,7 @@ class MedicalLog(db.Model):
     rescuer_name = db.Column(db.String(100), nullable=True)
     clinic_name = db.Column(db.String(100), nullable=True)
     cost = db.Column(db.Float, default=0.0)
-    date = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
+    date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     release_date = db.Column(db.DateTime, nullable=True)
 
 class FeedingLog(db.Model):
@@ -87,7 +87,7 @@ class FeedingLog(db.Model):
     volunteer_name = db.Column(db.String(100), nullable=False)
     location_sector = db.Column(db.String(50), nullable=False)
     round_number = db.Column(db.Integer, nullable=False)  # 1, 2, or 3
-    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
 class EmergencyReport(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -95,7 +95,7 @@ class EmergencyReport(db.Model):
     location = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=True)
     status = db.Column(db.String(20), default="Pending") # "Pending", "Resolved"
-    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
 class InventoryItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -103,4 +103,4 @@ class InventoryItem(db.Model):
     quantity = db.Column(db.Float, default=0.0)
     unit = db.Column(db.String(20), default="kg") # "kg", "units", "bottles"
     category = db.Column(db.String(1), default="C") # A (High value), B, C (Kibble)
-    last_updated = db.Column(db.DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
+    last_updated = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
