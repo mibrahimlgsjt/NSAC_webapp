@@ -40,6 +40,11 @@ def animal_detail(animal_id):
     recent_sighting = Sighting.query.filter_by(animal_id=animal.id).order_by(Sighting.timestamp.desc()).first()
     return render_template('animal_detail.html', animal=animal, sighting=recent_sighting)
 
+@public_bp.route('/directory')
+def directory():
+    animals = Animal.query.order_by(Animal.name).all()
+    return render_template('directory.html', animals=animals)
+
 @public_bp.route('/report')
 def report():
     return render_template('report.html')
