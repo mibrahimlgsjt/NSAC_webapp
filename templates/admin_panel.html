@@ -12,11 +12,9 @@
         <div class="flex space-x-1 bg-gray-100/50 p-1.5 rounded-full shadow-inner overflow-x-auto max-w-full">
             <button @click="activeTab = 'medical'" :class="activeTab === 'medical' ? 'bg-white text-digital-lavender shadow-md scale-105' : 'text-gray-400 hover:text-gray-600 hover:bg-white/50'" class="px-5 py-2.5 rounded-full font-bold transition transform text-sm whitespace-nowrap">Medical</button>
             <button @click="activeTab = 'feeding'" :class="activeTab === 'feeding' ? 'bg-white text-teal-600 shadow-md scale-105' : 'text-gray-400 hover:text-gray-600 hover:bg-white/50'" class="px-5 py-2.5 rounded-full font-bold transition transform text-sm whitespace-nowrap">Feeding</button>
-            {% if current_user.role == 'admin' %}
             <button @click="activeTab = 'inventory'" :class="activeTab === 'inventory' ? 'bg-white text-yellow-600 shadow-md scale-105' : 'text-gray-400 hover:text-gray-600 hover:bg-white/50'" class="px-5 py-2.5 rounded-full font-bold transition transform text-sm whitespace-nowrap">Inventory</button>
             <button @click="activeTab = 'reports'" :class="activeTab === 'reports' ? 'bg-white text-red-500 shadow-md scale-105' : 'text-gray-400 hover:text-gray-600 hover:bg-white/50'" class="px-5 py-2.5 rounded-full font-bold transition transform text-sm whitespace-nowrap">Reports</button>
             <button @click="activeTab = 'management'" :class="activeTab === 'management' ? 'bg-white text-purple-600 shadow-md scale-105' : 'text-gray-400 hover:text-gray-600 hover:bg-white/50'" class="px-5 py-2.5 rounded-full font-bold transition transform text-sm whitespace-nowrap">Management</button>
-            {% endif %}
         </div>
 ...
     <!-- Management Tab (Admin Only) -->

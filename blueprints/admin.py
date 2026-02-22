@@ -24,21 +24,14 @@ def panel():
     emergency_reports = EmergencyReport.query.order_by(EmergencyReport.timestamp.desc()).all()
     inventory_items = InventoryItem.query.all()
     
-    # RBAC logic: Some data is only for Admins
-    if current_user.role != 'admin':
-        # Limit volunteer view (maybe just feeding and emergencies)
-        # For simplicity in this UI, we just alert them in the template or filter here
-        inventory_items = [] 
-        alerts = ["Notice: Volunteer Access (Limited View)"]
-    else:
-        # Check for low stock alerts (Example logic)
-        alerts = []
-        for item in inventory_items:
-            # Simple threshold logic
-            if item.category == 'A' and item.quantity < 5:
-                alerts.append(f"Low Stock: {item.name} (Category A)")
-            elif item.category == 'C' and item.quantity < 20:
-                alerts.append(f"Low Stock: {item.name} (Category C)")
+    # Check for low stock alerts (Example logic)
+    alerts = []
+    for item in inventory_items:
+        # Simple threshold logic
+        if item.category == 'A' and item.quantity < 5:
+            alerts.append(f"Low Stock: {item.name} (Category A)")
+        elif item.category == 'C' and item.quantity < 20:
+            alerts.append(f"Low Stock: {item.name} (Category C)")
             
     return render_template('admin_panel.html', 
                            animals=animals, 
