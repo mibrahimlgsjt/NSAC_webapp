@@ -56,6 +56,14 @@ class Animal(db.Model):
 
     sightings = db.relationship('Sighting', backref='animal', lazy=True)
     medical_logs = db.relationship('MedicalLog', backref='animal', lazy=True)
+    comments = db.relationship('Comment', backref='animal', lazy=True, cascade="all, delete-orphan")
+
+class Comment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    animal_id = db.Column(db.Integer, db.ForeignKey('animal.id'), nullable=False)
+    user_name = db.Column(db.String(100), default="Anonymous")
+    content = db.Column(db.String(500), nullable=False)
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
 class Sighting(db.Model):
     id = db.Column(db.Integer, primary_key=True)
