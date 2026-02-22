@@ -235,7 +235,7 @@
             <div class="relative w-full aspect-[4/5] bg-gray-100 group cursor-pointer" 
                  @click="openStory({name: '{{ animal.name }}', img: '{{ animal.image_url }}', likes: {{ animal.likes }}, id: {{ animal.id }}})"
                  @dblclick.stop="doubleTapLike({{ animal.id }})">
-                <img src="{{ animal.image_url }}" alt="{{ animal.name }}" class="w-full h-full object-cover">
+                <img src="{{ animal.image_url }}" alt="{{ animal.name }}" class="w-full h-full object-cover" loading="lazy">
                 
                 <!-- Big Heart Animation -->
                 <div id="big-heart-{{ animal.id }}" class="absolute inset-0 flex items-center justify-center hidden pointer-events-none">

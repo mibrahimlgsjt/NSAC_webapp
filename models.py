@@ -52,9 +52,10 @@ class Animal(db.Model):
     # Composite Index for optimization
     __table_args__ = (
         db.Index('idx_animal_sector_name', 'current_sector', 'name'),
+        db.Index('idx_animal_last_fed', 'last_fed'),
     )
 
-    sightings = db.relationship('Sighting', backref='animal', lazy=True)
+    sightings = db.relationship('Sighting', backref='animal', lazy='select')
     medical_logs = db.relationship('MedicalLog', backref='animal', lazy=True)
     comments = db.relationship('Comment', backref='animal', lazy=True, cascade="all, delete-orphan")
 
@@ -67,7 +68,7 @@ class Comment(db.Model):
 
 class Sighting(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    animal_id = db.Column(db.Integer, db.ForeignKey('animal.id'), nullable=False)
+    animal_id = db.Column(db.Integer, db.ForeignKey('animal.id', ondelete='CASCADE'), nullable=False)
     location_sector = db.Column(db.String(100), nullable=False)
     timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     user_submitted_image = db.Column(db.String(500), nullable=True)
@@ -78,6 +79,7 @@ class Sighting(db.Model):
     # Composite Index for map optimization
     __table_args__ = (
         db.Index('idx_sighting_sector_time', 'location_sector', 'timestamp'),
+        db.Index('idx_sighting_animal_id', 'animal_id'),
     )
 
 class MedicalLog(db.Model):

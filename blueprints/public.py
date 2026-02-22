@@ -1,10 +1,12 @@
 from flask import Blueprint, render_template, request
 from models import Animal, Sighting, FeedingLog, db
 from datetime import datetime, timedelta, timezone
+from extensions import cache
 
 public_bp = Blueprint('public', __name__)
 
 @public_bp.route('/')
+@cache.cached(timeout=60)
 def index():
     animals = Animal.query.all()
     # Check feeding status for last 4 hours
