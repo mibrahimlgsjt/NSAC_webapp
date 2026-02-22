@@ -7,7 +7,7 @@ from blueprints.api import api_bp
 from blueprints.auth import auth_bp
 import random
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 app = Flask(__name__)
 
@@ -33,7 +33,7 @@ login_manager.login_view = 'auth.login'
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return db.session.get(User, int(user_id))
 
 app.register_blueprint(public_bp)
 app.register_blueprint(admin_bp)
@@ -89,7 +89,7 @@ def seed_database():
                     history=data[5],
                     sponsor_name=data[6],
                     image_url=data[7],
-                    last_fed=datetime.utcnow() - timedelta(hours=random.randint(1, 12))
+                    last_fed=datetime.now(timezone.utc) - timedelta(hours=random.randint(1, 12))
                 )
                 db.session.add(animal)
                 created_animals.append(animal)
@@ -106,7 +106,7 @@ def seed_database():
                 sighting = Sighting(
                     animal_id=animal.id,
                     location_sector=random.choice(hotspots),
-                    timestamp=datetime.utcnow() - timedelta(hours=random.randint(0, 48)),
+                    timestamp=datetime.now(timezone.utc) - timedelta(hours=random.randint(0, 48)),
                     user_submitted_image=animal.image_url, # Reusing image for mock
                     likes=random.randint(0, 20) # Random initial likes
                 )
