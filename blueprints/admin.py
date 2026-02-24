@@ -41,6 +41,15 @@ def panel():
                            inventory_items=inventory_items,
                            alerts=alerts)
 
+def sanitize_for_csv(value):
+    """
+    Sanitizes a value to prevent CSV injection (Formula Injection).
+    Prepends a single quote to values starting with =, +, -, or @.
+    """
+    if isinstance(value, str) and value.startswith(('=', '+', '-', '@')):
+        return f"'{value}"
+    return value
+
 @admin_bp.route('/admin/export/logs')
 @login_required
 def export_logs():
@@ -55,11 +64,11 @@ def export_logs():
     for log in logs:
         writer.writerow([
             log.date.strftime('%Y-%m-%d'),
-            log.animal.name,
-            log.condition,
-            log.clinic_name or '-',
+            sanitize_for_csv(log.animal.name),
+            sanitize_for_csv(log.condition),
+            sanitize_for_csv(log.clinic_name or '-'),
             log.cost,
-            log.rescuer_name or '-',
+            sanitize_for_csv(log.rescuer_name or '-'),
             log.release_date.strftime('%Y-%m-%d') if log.release_date else '-'
         ])
     
