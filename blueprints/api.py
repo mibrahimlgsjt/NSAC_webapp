@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request, session, redirect, url_for, current_app
 from flask_login import current_user, login_required
-from models import db, Animal, FeedingLog, MedicalLog, InventoryItem, EmergencyReport, Sighting
+from models import db, Animal, FeedingLog, MedicalLog, InventoryItem, EmergencyReport, Sighting, Comment
 from datetime import datetime, timezone
 from utils.image_handler import save_image
 from extensions import cache, vote_bloom
@@ -225,6 +225,56 @@ def get_paginated_sightings(animal_id):
         'items': result,
         'has_next': pagination.has_next,
         'next_page': pagination.next_num
+    })
+
+@api_bp.route('/animal/<int:animal_id>/comments', methods=['GET'])
+def get_comments(animal_id):
+    animal = db.get_or_404(Animal, animal_id)
+    comments = Comment.query.filter_by(animal_id=animal_id).order_by(Comment.timestamp.desc()).all()
+
+    result = []
+    for comment in comments:
+        result.append({
+            'id': comment.id,
+            'user_name': comment.user_name,
+            'content': comment.content,
+            'timestamp': comment.timestamp.strftime('%d %b %H:%M')
+        })
+    return jsonify(result)
+
+@api_bp.route('/animal/<int:animal_id>/comments', methods=['POST'])
+def add_comment(animal_id):
+    # Check if animal exists
+    animal = db.session.get(Animal, animal_id)
+    if not animal:
+        return jsonify(error="Animal not found"), 404
+
+    data = request.json
+    content = data.get('content')
+    if not content:
+        return jsonify(error="Content is required"), 400
+
+    user_name = session.get('user_name', 'Anonymous')
+    if current_user.is_authenticated:
+        user_name = current_user.username
+
+    comment = Comment(
+        animal_id=animal_id,
+        user_name=user_name,
+        content=content,
+        timestamp=datetime.now(timezone.utc)
+    )
+    db.session.add(comment)
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'comment': {
+            'id': comment.id,
+            'user_name': comment.user_name,
+            'content': comment.content,
+            'timestamp': comment.timestamp.strftime('%d %b %H:%M')
+        }
     })
 
 # --- Round 4: Trending Animals (LRU Cache) ---
