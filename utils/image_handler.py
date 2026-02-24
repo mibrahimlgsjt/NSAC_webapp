@@ -23,9 +23,50 @@ if os.environ.get('CLOUDINARY_URL'):
         secure=True
     )
 
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+def validate_image_header(stream):
+    """
+    Reads the first 512 bytes of the stream to check for magic bytes.
+    Returns the detected format extension ('png', 'jpg', 'webp') or None.
+    Resets stream position to 0.
+    """
+    try:
+        header = stream.read(512)
+        stream.seek(0)
+    except Exception:
+        return None
+
+    if header.startswith(b'\x89PNG\r\n\x1a\n'):
+        return 'png'
+    elif header.startswith(b'\xff\xd8\xff'):
+        return 'jpg'
+    elif header.startswith(b'RIFF') and header[8:12] == b'WEBP':
+        return 'webp'
+    return None
+
+def allowed_file(file_storage):
+    """
+    Checks if the file has an allowed extension AND matches the content type.
+    """
+    filename = file_storage.filename
+    if not filename or '.' not in filename:
+        return False
+
+    ext = filename.rsplit('.', 1)[1].lower()
+    if ext not in ALLOWED_EXTENSIONS:
+        return False
+
+    # Check content magic bytes
+    detected_format = validate_image_header(file_storage.stream)
+    if not detected_format:
+        return False
+
+    # Verify content matches extension
+    # JPEG files can have .jpg or .jpeg extension
+    if detected_format == 'jpg' and ext in ('jpg', 'jpeg'):
+        return True
+
+    # For other formats, extension must match exactly
+    return ext == detected_format
 
 def save_image(file_storage, subfolder='sightings'):
     """
@@ -33,7 +74,7 @@ def save_image(file_storage, subfolder='sightings'):
     Returns (db_path, blur_hash) relative path for the database.
     Returns (None, None) if validation fails or error occurs.
     """
-    if not file_storage or not allowed_file(file_storage.filename):
+    if not file_storage or not allowed_file(file_storage):
         return None, None
 
     # Generate unique filename
