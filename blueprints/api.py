@@ -7,6 +7,13 @@ from extensions import cache, vote_bloom
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
+def _get_image_url(filename):
+    if not filename:
+        return None
+    if filename.startswith(('http://', 'https://')):
+        return filename
+    return url_for('static', filename=filename)
+
 @api_bp.route('/animal/<int:animal_id>/vote_tag', methods=['POST'])
 def vote_tag(animal_id):
     tag = request.json.get('tag')
@@ -186,7 +193,7 @@ def upload_sighting():
     db.session.add(new_sighting)
     db.session.commit()
     
-    return jsonify(success=True, image_url=url_for('static', filename=image_path), message="Sighting uploaded! +10 Karma ✨")
+    return jsonify(success=True, image_url=_get_image_url(image_path), message="Sighting uploaded! +10 Karma ✨")
 
 @api_bp.route('/sighting/<int:sighting_id>/like', methods=['POST'])
 def like_sighting(sighting_id):
@@ -207,7 +214,7 @@ def get_paginated_sightings(animal_id):
     for s in pagination.items:
         result.append({
             'id': s.id,
-            'image_url': url_for('static', filename=s.user_submitted_image) if s.user_submitted_image else None,
+            'image_url': _get_image_url(s.user_submitted_image),
             'blur_hash': s.blur_hash,
             'location': s.location_sector,
             'timestamp': s.timestamp.strftime('%d %b %H:%M'),
