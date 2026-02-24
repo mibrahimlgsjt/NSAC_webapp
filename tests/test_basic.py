@@ -82,3 +82,14 @@ def test_tag_voting(client):
     rv2 = client.post(f'/api/animal/{aid}/vote_tag', 
                       json={'tag': 'Playful'})
     assert rv2.status_code == 403
+
+def test_submit_report_unauthorized(client):
+    data = {
+        'issue_type': 'Sickness',
+        'location': 'Test Location',
+        'description': 'Test Description'
+    }
+    rv = client.post('/api/report', data=data)
+    # Flask-Login redirects to login page by default for unauthenticated users
+    assert rv.status_code == 302
+    assert '/login' in rv.headers['Location']

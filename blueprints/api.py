@@ -97,6 +97,7 @@ def update_inventory():
     return redirect(url_for('admin.panel'))
 
 @api_bp.route('/report', methods=['POST'])
+@login_required
 def submit_report():
     data = request.form
     new_report = EmergencyReport(
