@@ -112,6 +112,39 @@
             opacity: 0.6;
             z-index: -1;
         }
+
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(-3deg); }
+            50% { transform: rotate(3deg); }
+        }
+
+        @keyframes pop-in {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes shine {
+            to { background-position: 200% center; }
+        }
+
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .animate-wiggle {
+            animation: wiggle 0.5s ease-in-out infinite;
+        }
+
+        .btn-shine {
+            background-size: 200% auto;
+            animation: shine 3s linear infinite;
+        }
     </style>
     <script>
         tailwind.config = {

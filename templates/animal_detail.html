@@ -39,7 +39,7 @@
         // Simple Particle Burst
         for(let i=0; i<8; i++) {
             const el = document.createElement('div');
-            el.innerHTML = ['❤️', '✨', '🐾'][Math.floor(Math.random()*3)];
+            el.innerHTML = ['❤️', '✨', '🐾', '🌟', '💖'][Math.floor(Math.random()*5)];
             el.style.position = 'fixed';
             el.style.left = e.clientX + 'px';
             el.style.top = e.clientY + 'px';
@@ -122,7 +122,7 @@
         <div class="glass p-6 rounded-[2rem] flex flex-col items-center">
             <span class="text-xs font-black uppercase text-gray-400 mb-2">Love</span>
             <div class="w-full h-4 bg-gray-100 rounded-full overflow-hidden border-2 border-white shadow-inner">
-                <div class="h-full bg-pink-400 transition-all duration-1000 shadow-[0_0_10px_rgba(244,114,182,0.5)]" style="width: {{ [animal.likes * 2, 100]|min }}%"></div>
+                <div class="h-full bg-pink-400 transition-all duration-1000 shadow-[0_0_10px_rgba(244,114,182,0.5)] animate-pulse" style="width: {{ [animal.likes * 2, 100]|min }}%"></div>
             </div>
             <span class="text-[10px] font-bold mt-1 text-gray-500">{{ animal.likes }} Hearts</span>
         </div>
@@ -215,7 +215,7 @@
             </div>
 
             <!-- Upload Action -->
-            <button @click="showUploadModal = true" class="w-full bg-gradient-to-r from-digital-lavender to-purple-500 text-white font-black py-5 rounded-[2rem] shadow-lg shadow-purple-200 hover:shadow-xl hover:scale-105 transition transform active:scale-95 flex items-center justify-center space-x-2">
+            <button @click="showUploadModal = true" class="w-full bg-gradient-to-r from-digital-lavender to-purple-500 text-white font-black py-5 rounded-[2rem] shadow-lg shadow-purple-200 hover:shadow-xl hover:scale-105 transition transform active:scale-95 flex items-center justify-center space-x-2 btn-shine">
                 <span>📸</span>
                 <span>Upload Sighting</span>
             </button>
