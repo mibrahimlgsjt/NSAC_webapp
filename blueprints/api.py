@@ -154,6 +154,10 @@ def upload_sighting():
     # Public endpoint - No login required
     animal_id = request.form.get('animal_id')
     location = request.form.get('location')
+
+    animal = db.session.get(Animal, animal_id)
+    if not animal:
+        return jsonify(error="Animal not found"), 404
     
     if 'sighting_image' not in request.files:
         return jsonify(error="No image uploaded"), 400
@@ -179,9 +183,7 @@ def upload_sighting():
     )
     
     # Update animal's current location based on this latest sighting
-    animal = db.session.get(Animal, animal_id)
-    if animal:
-        animal.current_sector = location
+    animal.current_sector = location
     
     db.session.add(new_sighting)
     db.session.commit()
