@@ -8,3 +8,4 @@ pytest==8.1.1
 psycopg2-binary==2.9.11
 gunicorn==21.2.0
 cloudinary==1.36.0
+blurhash==1.1.5
