@@ -89,6 +89,12 @@ class FeedingLog(db.Model):
     round_number = db.Column(db.Integer, nullable=False)  # 1, 2, or 3
     timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
+    # Optimization: Indexes for frequent dashboard and admin queries
+    __table_args__ = (
+        db.Index('idx_feeding_log_sector_timestamp', 'location_sector', 'timestamp'),
+        db.Index('idx_feeding_log_timestamp', 'timestamp'),
+    )
+
 class EmergencyReport(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     issue_type = db.Column(db.String(50), nullable=False) # "Minor Injury", "Sickness"
