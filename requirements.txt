@@ -12,6 +12,10 @@ Flask-Login==0.6.3
 Flask-SQLAlchemy==3.1.1
 greenlet==3.3.0
 gunicorn==21.2.0
+<<<<<<< add-blurhash-dependency-13837425277550733365
+cloudinary==1.36.0
+blurhash==1.1.5
+=======
 iniconfig==2.3.0
 itsdangerous==2.2.0
 Jinja2==3.1.6
@@ -28,3 +32,4 @@ SQLAlchemy==2.0.29
 typing_extensions==4.15.0
 urllib3==2.6.3
 Werkzeug==3.1.6
+>>>>>>> main
