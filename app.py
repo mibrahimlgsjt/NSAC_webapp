@@ -1,5 +1,5 @@
 from flask import Flask
-from extensions import db, cache, login_manager
+from extensions import db, cache, login_manager, compress
 from models import Animal, Sighting, MedicalLog, FeedingLog, EmergencyReport, InventoryItem, User
 from blueprints.public import public_bp
 from blueprints.admin import admin_bp
@@ -29,6 +29,7 @@ app.config['CACHE_DEFAULT_TIMEOUT'] = 300
 db.init_app(app)
 cache.init_app(app)
 login_manager.init_app(app)
+compress.init_app(app)
 login_manager.login_view = 'auth.login'
 
 @login_manager.user_loader
