@@ -4,7 +4,6 @@
 # description.
 
 import sys
-import os
 
 # The path to your project directory
 # REPLACE 'yourusername' with your actual PythonAnywhere username!
