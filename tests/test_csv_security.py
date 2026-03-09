@@ -32,7 +32,7 @@ class TestCSVSecurity(unittest.TestCase):
             animal_id=animal.id,
             condition=malicious_condition,
             clinic_name="@SUM(1+1)",
-            rescuer_name="+malicious"
+            rescuer_name="\t+malicious"
         )
         db.session.add(log)
         db.session.commit()
@@ -86,7 +86,7 @@ class TestCSVSecurity(unittest.TestCase):
         self.assertTrue(animal_name.startswith("'="), "Animal Name field was not properly escaped")
         self.assertTrue(condition.startswith("'="), "Condition field was not properly escaped")
         self.assertTrue(clinic.startswith("'@"), "Clinic field was not properly escaped")
-        self.assertTrue(rescuer.startswith("'+"), "Rescuer field was not properly escaped")
+        self.assertTrue(rescuer.startswith("'\t+"), "Rescuer field was not properly escaped")
 
 if __name__ == '__main__':
     unittest.main()

@@ -44,9 +44,9 @@ def panel():
 def sanitize_for_csv(value):
     """
     Sanitizes a value to prevent CSV injection (Formula Injection).
-    Prepends a single quote to values starting with =, +, -, or @.
+    Prepends a single quote to values starting with =, +, -, @, \t, or \r.
     """
-    if isinstance(value, str) and value.startswith(('=', '+', '-', '@')):
+    if isinstance(value, str) and value.startswith(('=', '+', '-', '@', '\t', '\r')):
         return f"'{value}"
     return value
 
