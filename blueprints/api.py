@@ -54,10 +54,8 @@ def feed_animal():
         timestamp=datetime.now(timezone.utc)
     )
     
-    # Update last_fed for all animals in this sector
-    animals_in_sector = Animal.query.filter_by(current_sector=sector).all()
-    for animal in animals_in_sector:
-        animal.last_fed = datetime.now(timezone.utc)
+    # Update last_fed for all animals in this sector (Bulk update to avoid N+1)
+    Animal.query.filter_by(current_sector=sector).update({'last_fed': datetime.now(timezone.utc)})
         
     db.session.add(new_log)
     db.session.commit()
