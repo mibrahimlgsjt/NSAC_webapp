@@ -9,17 +9,24 @@ def index():
     # Fetch animals for the "Trending" carousel (simplified logic for now)
     animals = Animal.query.limit(10).all()
     
-    # Calculate sector feeding status for the last 4 hours
-    four_hours_ago = datetime.now(timezone.utc) - timedelta(hours=4)
     sectors = ["C1", "C2", "NBS", "SEECS", "SADA", "SMME", "Retro", "Margalla"]
+    now = datetime.now(timezone.utc)
     
     feeding_status = {}
     for s in sectors:
-        # Check if any feeding log exists for this sector in the last 4 hours
-        log = FeedingLog.query.filter(
-            FeedingLog.fed_at >= four_hours_ago
-        ).join(Animal).filter(Animal.sector == s).first()
-        feeding_status[s] = "fed" if log else "hungry"
+        # Find the most recent feeding log for any animal in this sector
+        log = FeedingLog.query.join(Animal).filter(Animal.sector == s).order_by(FeedingLog.fed_at.desc()).first()
+        
+        if log:
+            fed_at = log.fed_at
+            if fed_at.tzinfo is None:
+                fed_at = fed_at.replace(tzinfo=timezone.utc)
+            
+            diff = now - fed_at
+            hours = diff.total_seconds() / 3600
+            feeding_status[s] = hours
+        else:
+            feeding_status[s] = 99.0 # Very long ago if no logs exist
         
     return render_template('public/index.html', animals=animals, feeding_status=feeding_status)
 
