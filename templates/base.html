@@ -11,8 +11,48 @@
     
     <!-- Google Fonts: Baloo 2 and Nunito -->
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
-    <!-- Tailwind CSS v4 (using CDN for prototype) -->
+    <!-- Tailwind CSS v3 (Stable CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cream: '#FDF6EC',
+                        paper: '#FFF9F2',
+                        ink: '#2D2013',
+                        muted: '#8C7B6B',
+                        paw: '#FF7B5C',
+                        'paw-light': '#FFE4DC',
+                        meadow: '#52B788',
+                        'meadow-light': '#D8F3DC',
+                        sunflower: '#F4A946',
+                        'sunflower-light': '#FFF0CC',
+                        rosewood: '#E05C6A',
+                        'rosewood-light': '#FDDDE0',
+                        lavender: '#9B8FD9',
+                        'lavender-light': '#EAE7FA',
+                    },
+                    borderRadius: {
+                        'sm': '10px',
+                        'md': '18px',
+                        'lg': '28px',
+                        'pill': '9999px',
+                    },
+                    boxShadow: {
+                        'card': '0 2px 12px rgba(45,32,19,0.08), 0 1px 3px rgba(45,32,19,0.04)',
+                        'hover': '0 8px 28px rgba(45,32,19,0.14), 0 2px 6px rgba(45,32,19,0.06)',
+                        'paw': '0 4px 16px rgba(255,123,92,0.35)',
+                    },
+                    fontFamily: {
+                        'display': ['"Baloo 2"', 'cursive'],
+                        'body': ['"Nunito"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <!-- Confetti -->
@@ -25,25 +65,53 @@
             Alpine.store('app', {
                 theme: localStorage.getItem('theme') || 'light',
                 hideNav: false,
+                refreshing: false,
+                startY: 0,
+                pullDistance: 0,
+                
+                handleTouchStart(e) {
+                    if (window.scrollY === 0) {
+                        this.startY = e.touches[0].pageY;
+                    }
+                },
+                handleTouchMove(e) {
+                    if (this.startY > 0) {
+                        const currentY = e.touches[0].pageY;
+                        this.pullDistance = Math.min(Math.max(0, currentY - this.startY), 120);
+                    }
+                },
+                handleTouchEnd() {
+                    if (this.pullDistance > 80) {
+                        this.refreshing = true;
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    }
+                    this.startY = 0;
+                    this.pullDistance = 0;
+                },
+
                 toggleTheme() {
                     this.theme = this.theme === 'light' ? 'dark' : 'light';
                     localStorage.setItem('theme', this.theme);
                 },
                 celebrate() {
                     const pawEmojis = ['🐾', '🍚', '💛', '🌿', '✨'];
+                    const scalar = 2;
+                    const shapes = pawEmojis.map(emoji => confetti.shapeFromText({ text: emoji, scalar }));
+                    
+                    confetti({
+                        particleCount: 40,
+                        spread: 70,
+                        origin: { y: 0.6 },
+                        shapes: shapes
+                    });
+                    
                     confetti({
                         particleCount: 60,
-                        spread: 80,
-                        origin: { y: 0.6 },
-                        shapes: ['text'],
-                        scalar: 1.4,
-                        text: pawEmojis[Math.floor(Math.random() * pawEmojis.length)]
-                    });
-                    confetti({
-                        particleCount: 80,
-                        spread: 90,
-                        colors: ['#52B788', '#FF7B5C', '#F4A946', '#FDF6EC'],
-                        origin: { y: 0.55 }
+                        spread: 100,
+                        origin: { y: 0.55 },
+                        colors: ['#52B788', '#FF7B5C', '#F4A946', '#FDF6EC']
                     });
                 }
             })
@@ -61,8 +129,8 @@
             return canvas.toDataURL();
         }
     </script>
-    <style type="text/tailwindcss">
-        @theme {
+    <style>
+        :root {
             --color-cream: #FDF6EC;
             --color-paper: #FFF9F2;
             --color-ink: #2D2013;
@@ -77,30 +145,19 @@
             --color-rosewood-light: #FDDDE0;
             --color-lavender: #9B8FD9;
             --color-lavender-light: #EAE7FA;
-
-            --font-display: 'Baloo 2', cursive;
-            --font-body: 'Nunito', sans-serif;
-
-            --radius-sm: 10px;
-            --radius-md: 18px;
-            --radius-lg: 28px;
-            --radius-pill: 9999px;
-
-            --shadow-card: 0 2px 12px rgba(45,32,19,0.08), 0 1px 3px rgba(45,32,19,0.04);
-            --shadow-hover: 0 8px 28px rgba(45,32,19,0.14), 0 2px 6px rgba(45,32,19,0.06);
-            --shadow-paw: 0 4px 16px rgba(255,123,92,0.35);
         }
 
-        /* Base overrides */
-        @layer base {
-            body {
-                @apply bg-cream text-ink font-body transition-colors duration-500;
-                background-image: radial-gradient(circle, rgba(45,32,19,0.06) 1px, transparent 1px);
-                background-size: 24px 24px;
-            }
-            h1, h2, h3, h4, button, .badge, .nav-label {
-                @apply font-display;
-            }
+        body {
+            background-color: var(--color-cream);
+            color: var(--color-ink);
+            font-family: "Nunito", sans-serif;
+            background-image: radial-gradient(circle, rgba(45,32,19,0.06) 1px, transparent 1px);
+            background-size: 24px 24px;
+            transition: background-color 0.5s, color 0.5s;
+        }
+
+        h1, h2, h3, h4, button, .badge, .nav-label {
+            font-family: "Baloo 2", cursive;
         }
 
         /* Dark mode mapping */
@@ -111,36 +168,173 @@
             --color-muted: #A39284;
         }
 
-        /* Global Components */
-        @layer components {
-            .btn-primary {
-                @apply bg-paw text-white rounded-pill px-7 py-3.5 font-display font-bold text-lg cursor-pointer shadow-paw transition-all duration-200 hover:-translate-y-0.5 hover:scale-105 active:scale-95 active:shadow-none;
-            }
-            .btn-secondary {
-                @apply bg-paw-light text-paw rounded-pill px-6 py-3 font-display font-semibold border-2 border-transparent transition-all duration-150 hover:border-paw;
-            }
-            .badge {
-                @apply inline-flex items-center gap-1.5 rounded-pill px-3 py-1 font-display font-bold text-[0.78rem] border-2 border-transparent shadow-[inset_0_1px_0_rgba(255,255,255,0.6)];
-            }
-            
-            .bottom-nav {
-                @apply fixed bottom-4 left-1/2 -translate-x-1/2 bg-ink rounded-pill px-6 py-2.5 flex gap-7 items-center shadow-[0_8px_32px_rgba(45,32,19,0.25)] z-50;
-            }
-            .nav-item {
-                @apply flex flex-col items-center gap-0.5 text-muted transition-all duration-200 min-w-[48px] py-1;
-            }
-            .nav-item.active {
-                @apply text-paw -translate-y-1;
-            }
-            .nav-item:active {
-                @apply scale-90 -translate-y-1;
-            }
-            .nav-label {
-                @apply text-[0.65rem] font-bold tracking-wider;
-            }
-            .nav-item.sos {
-                @apply bg-rosewood text-white rounded-pill px-4 py-2 mx-1 shadow-[0_0_0_0_rgba(224,92,106,0.5)] animate-[sos-ring_2.5s_ease-out_infinite];
-            }
+        /* Custom Utilities/Components not easily done via basic Tailwind Extend */
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--color-paw);
+            color: white;
+            border-radius: 9999px;
+            padding: 0.875rem 1.75rem;
+            font-weight: 700;
+            font-size: 1.125rem;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(255,123,92,0.35);
+            transition: all 0.2s;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px) scale(1.05);
+        }
+        .btn-primary:active {
+            transform: scale(0.95);
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--color-paw-light);
+            color: var(--color-paw);
+            border-radius: 9999px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            border: 2px solid transparent;
+            transition: all 0.15s;
+        }
+        .btn-secondary:hover {
+            border-color: var(--color-paw);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            border-radius: 9999px;
+            padding: 0.25rem 0.75rem;
+            font-weight: 700;
+            font-size: 0.78rem;
+            border: 2px solid transparent;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+        }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--color-ink);
+            border-radius: 9999px;
+            padding: 0.625rem 1.5rem;
+            display: flex;
+            gap: 1.75rem;
+            align-items: center;
+            box-shadow: 0 8px 32px rgba(45,32,19,0.25);
+            z-index: 50;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.125rem;
+            color: var(--color-muted);
+            transition: all 0.2s;
+            min-width: 48px;
+            padding-top: 0.25rem;
+            padding-bottom: 0.25rem;
+        }
+        .nav-item.active {
+            color: var(--color-paw);
+            transform: translateY(-0.25rem);
+        }
+        .nav-item:active {
+            transform: scale(0.9) translateY(-0.25rem);
+        }
+
+        .nav-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.025em;
+        }
+
+        .nav-item.sos {
+            background-color: var(--color-rosewood);
+            color: white;
+            border-radius: 9999px;
+            padding: 0.5rem 1rem;
+            margin-left: 0.25rem;
+            margin-right: 0.25rem;
+            box-shadow: 0 0 0 0 rgba(224,92,106,0.5);
+            animation: sos-ring 2.5s ease-out infinite;
+        }
+
+        .animal-card {
+            background-color: var(--color-paper);
+            border-radius: 28px;
+            box-shadow: 0 2px 12px rgba(45,32,19,0.08), 0 1px 3px rgba(45,32,19,0.04);
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .animal-card:hover {
+            transform: translateY(-0.375rem) scale(1.015);
+            box-shadow: 0 8px 28px rgba(45,32,19,0.14), 0 2px 6px rgba(45,32,19,0.06);
+        }
+
+        .tag-pill {
+            background-color: var(--color-paw-light);
+            color: var(--color-paw);
+            border-radius: 9999px;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: all 0.15s;
+        }
+        .tag-pill:hover {
+            background-color: var(--color-paw);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .dashboard-panel {
+            background-color: var(--color-paper);
+            border-radius: 28px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 12px rgba(45,32,19,0.08), 0 1px 3px rgba(45,32,19,0.04);
+            border-left: 5px solid var(--color-paw);
+        }
+        .panel-title {
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: var(--color-ink);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .data-row {
+            border-radius: 10px;
+            padding: 0.625rem 0.875rem;
+            transition: background-color 0.15s;
+        }
+        .data-row:hover {
+            background-color: var(--color-cream);
+        }
+        
+        .btn-ghost {
+            background-color: transparent;
+            color: var(--color-muted);
+            border-radius: 9999px;
+            padding: 0.625rem 1.25rem;
+            border: 2px solid rgba(45,32,19,0.1);
+            font-weight: 600;
+            transition: all 0.15s;
+        }
+        .btn-ghost:hover {
+            border-color: var(--color-paw);
+            color: var(--color-paw);
         }
 
         @keyframes sos-ring {
@@ -148,13 +342,110 @@
             60%  { box-shadow: 0 0 0 10px rgba(224,92,106, 0); }
             100% { box-shadow: 0 0 0 0 rgba(224,92,106, 0); }
         }
+
+        /* Pull-to-refresh animation */
+        @keyframes paw-spin {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+        .ptr-icon {
+            animation: paw-spin 0.8s linear infinite;
+        }
+
+        /* Bowl Pulse for critical status */
+        @keyframes bowl-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.12); }
+        }
+        .sector-critical .bowl-icon {
+            animation: bowl-pulse 1.2s ease-in-out infinite;
+            filter: drop-shadow(0 0 6px rgba(224, 92, 106, 0.6));
+        }
+
+        /* Staggered Card Entrance */
+        @keyframes card-enter {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .stagger-card {
+            opacity: 0;
+            animation: card-enter 0.4s ease forwards;
+        }
+
+        /* Karma Pop Animation */
+        @keyframes karma-pop {
+            0%   { transform: scale(1); }
+            40%  { transform: scale(1.3) rotate(-5deg); }
+            70%  { transform: scale(0.9) rotate(3deg); }
+            100% { transform: scale(1); }
+        }
+        .karma-pop { animation: karma-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+        /* Heart Rise Animation */
+        @keyframes heart-rise {
+            0%   { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-40px) scale(1.3); }
+        }
+        .heart-float {
+            position: absolute;
+            pointer-events: none;
+            animation: heart-rise 0.75s ease-out forwards;
+        }
         
         [x-cloak] { display: none !important; }
+
+        /* Accessibility: Custom Focus Rings */
+        :focus-visible {
+            outline: 3px solid var(--color-paw);
+            outline-offset: 3px;
+        }
+
+        /* Accessibility: Reduced Motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+
+        /* Decorative: Section Waves */
+        .section-wave {
+            width: 100%;
+            height: 2.5rem;
+            margin-top: -0.25rem;
+            position: relative;
+            z-index: 10;
+        }
+        @media (min-width: 768px) {
+            .section-wave { height: 4rem; }
+        }
+
+        /* Decorative: Paw Print Accents */
+        .paw-accent::after {
+            content: '🐾';
+            font-size: 0.75em;
+            opacity: 0.2;
+            margin-left: 0.5rem;
+        }
     </style>
 </head>
 <body class="min-h-screen pb-24 md:pb-10 relative overflow-x-hidden"
-      x-data x-cloak
+      x-data
+      @touchstart="$store.app.handleTouchStart($event)"
+      @touchmove="$store.app.handleTouchMove($event)"
+      @touchend="$store.app.handleTouchEnd()"
       :class="{ 'theme-dark': $store.app.theme === 'dark' }">
+
+    <!-- Pull-to-refresh indicator -->
+    <div class="fixed top-0 left-0 right-0 z-[100] flex justify-center pointer-events-none transition-all duration-200"
+         :style="'transform: translateY(' + ($store.app.pullDistance - 60) + 'px)'"
+         x-show="$store.app.pullDistance > 0 || $store.app.refreshing" x-cloak>
+        <div class="bg-paper p-3 rounded-full shadow-hover border-2 border-paw flex items-center justify-center">
+            <span class="text-2xl ptr-icon">🐾</span>
+        </div>
+    </div>
 
     <!-- Mobile Nav (Floating Pill) -->
     <nav class="bottom-nav md:hidden" x-show="!$store.app.hideNav">

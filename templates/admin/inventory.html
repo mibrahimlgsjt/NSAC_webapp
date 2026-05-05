@@ -1,74 +1,97 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="mb-10 flex items-center justify-between">
-    <a href="{{ url_for('admin.panel') }}" class="inline-flex items-center space-x-2 text-gray-500 font-bold hover:text-digital-lavender transition group">
-        <span class="p-2 glass rounded-xl group-hover:-translate-x-1 transition">⬅️</span>
-        <span>Back to Panel</span>
-    </a>
-    <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Supply Registry 📦</h1>
-</div>
-
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-    <div class="glass p-6 rounded-[2rem] border-red-100">
-        <span class="w-8 h-8 bg-red-100 text-red-600 rounded-lg flex items-center justify-center font-bold text-xs mb-3">A</span>
-        <h3 class="font-bold text-gray-800">Critical Meds</h3>
-        <p class="text-xs text-gray-400">High value, life-saving items. Threshold: 5 units.</p>
+<div class="mb-10 flex flex-col md:flex-row md:items-center justify-between stagger-card">
+    <div>
+        <h1 class="text-4xl font-extrabold text-ink mb-2">Inventory 📦</h1>
+        <p class="text-muted font-medium">Monitor and restock essential supplies.</p>
     </div>
-    <div class="glass p-6 rounded-[2rem] border-yellow-100">
-        <span class="w-8 h-8 bg-yellow-100 text-yellow-600 rounded-lg flex items-center justify-center font-bold text-xs mb-3">B</span>
-        <h3 class="font-bold text-gray-800">General Care</h3>
-        <p class="text-xs text-gray-400">Bandages, grooming, standard meds.</p>
-    </div>
-    <div class="glass p-6 rounded-[2rem] border-neo-mint">
-        <span class="w-8 h-8 bg-neo-mint/20 text-green-700 rounded-lg flex items-center justify-center font-bold text-xs mb-3">C</span>
-        <h3 class="font-bold text-gray-800">Kibble & Basics</h3>
-        <p class="text-xs text-gray-400">Food, water bowls, cleaning. Threshold: 10kg.</p>
+    <div class="mt-6 md:mt-0">
+        <a href="{{ url_for('admin.inventory_add') }}" class="btn-primary flex items-center gap-2 py-3 px-6 bg-sunflower shadow-none text-ink">
+            <span class="text-xl">＋</span> <span>Add Supply</span>
+        </a>
     </div>
 </div>
 
-<div class="glass rounded-[3rem] overflow-hidden shadow-xl">
-    <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-            <thead>
-                <tr class="bg-white/30 border-b border-white/20">
-                    <th class="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Category</th>
-                    <th class="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Item Name</th>
-                    <th class="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Stock Level</th>
-                    <th class="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Actions</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-white/10">
-                {% for item in items %}
-                <tr class="hover:bg-white/20 transition duration-150">
-                    <td class="px-8 py-6">
-                        <span class="w-10 h-10 {% if item.category == 'A' %}bg-red-100 text-red-600{% elif item.category == 'B' %}bg-yellow-100 text-yellow-600{% else %}bg-neo-mint/20 text-green-700{% endif %} rounded-2xl flex items-center justify-center font-bold text-sm">
-                            {{ item.category }}
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 stagger-card" style="animation-delay: 0.1s">
+    <div class="bg-paper p-6 rounded-lg shadow-card border-l-[6px] border-rosewood">
+        <span class="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1">Critical (A)</span>
+        <span class="text-3xl font-extrabold text-ink">
+            {{ items|selectattr('category', 'equalto', 'A')|list|length }} Items
+        </span>
+    </div>
+    <div class="bg-paper p-6 rounded-lg shadow-card border-l-[6px] border-sunflower">
+        <span class="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1">Standard (B)</span>
+        <span class="text-3xl font-extrabold text-ink">
+            {{ items|selectattr('category', 'equalto', 'B')|list|length }} Items
+        </span>
+    </div>
+    <div class="bg-paper p-6 rounded-lg shadow-card border-l-[6px] border-meadow">
+        <span class="text-[10px] font-bold text-muted uppercase tracking-widest block mb-1">Stocked Well</span>
+        <span class="text-3xl font-extrabold text-ink text-meadow">Optimal</span>
+    </div>
+</div>
+
+<div class="bg-paper rounded-lg shadow-card overflow-hidden border border-ink/5 stagger-card" style="animation-delay: 0.15s">
+    <table class="w-full text-left">
+        <thead class="bg-cream border-b border-ink/5">
+            <tr>
+                <th class="px-6 py-4 text-[10px] font-bold text-muted uppercase tracking-widest">Item Name</th>
+                <th class="px-6 py-4 text-[10px] font-bold text-muted uppercase tracking-widest">Category</th>
+                <th class="px-6 py-4 text-[10px] font-bold text-muted uppercase tracking-widest">Stock Level</th>
+                <th class="px-6 py-4 text-[10px] font-bold text-muted uppercase tracking-widest text-right">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-ink/5">
+            {% for item in items %}
+            {% set is_low = item.quantity <= item.low_stock_threshold %}
+            <tr class="data-row hover:bg-cream/50 transition-colors">
+                <td class="px-6 py-4">
+                    <span class="font-extrabold text-ink">{{ item.name }}</span>
+                    <span class="text-[9px] font-bold text-muted uppercase block">Last updated: {{ item.last_updated.strftime('%d %b') if item.last_updated else 'Never' }}</span>
+                </td>
+                <td class="px-6 py-4">
+                    <span class="badge {{ 'badge-unwell' if item.category == 'A' else 'badge-resting' if item.category == 'B' else 'badge-happy' }}">
+                        Category {{ item.category }}
+                    </span>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm font-extrabold {{ 'text-rosewood' if is_low else 'text-ink' }}">
+                            {{ item.quantity }} {{ item.unit }}
                         </span>
-                    </td>
-                    <td class="px-8 py-6">
-                        <span class="font-bold text-gray-800 dark:text-white">{{ item.name }}</span>
-                    </td>
-                    <td class="px-8 py-6">
-                        {% set is_low = (item.category == 'A' and item.quantity < 5) or (item.category == 'C' and item.quantity < 10) %}
-                        <div class="flex items-center space-x-2">
-                            <span class="text-xl font-bold {% if is_low %}text-hyper-coral{% else %}text-gray-700 dark:text-white{% endif %}">
-                                {{ item.quantity }}{{ item.unit }}
-                            </span>
-                            {% if is_low %}
-                                <span class="bg-hyper-coral/10 text-hyper-coral px-3 py-1 rounded-xl text-[9px] font-bold uppercase animate-pulse">Low Stock</span>
-                            {% endif %}
-                        </div>
-                    </td>
-                    <td class="px-8 py-6 text-right">
-                        <button class="px-4 py-2 glass rounded-xl text-digital-lavender font-bold text-xs hover:bg-digital-lavender hover:text-white transition">
-                            Update
-                        </button>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+                        {% if is_low %}
+                            <span class="text-[9px] font-bold bg-rosewood-light text-rosewood px-2 py-0.5 rounded-full animate-pulse">LOW STOCK</span>
+                        {% endif %}
+                    </div>
+                </td>
+                <td class="px-6 py-4 text-right">
+                    <div class="flex justify-end gap-2">
+                        <a href="{{ url_for('admin.inventory_edit', item_id=item.id) }}" class="p-2 hover:bg-paw/10 rounded-md text-paw transition-colors">
+                            <span>✏️</span>
+                        </a>
+                        <form action="{{ url_for('admin.inventory_delete', item_id=item.id) }}" method="POST" onsubmit="return confirm('Delete {{ item.name }}?');">
+                            <button type="submit" class="p-2 hover:bg-rosewood/10 rounded-md text-rosewood transition-colors">
+                                <span>🗑️</span>
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
+
+<div class="mt-8 stagger-card" style="animation-delay: 0.2s">
+    <a href="{{ url_for('admin.panel') }}" class="btn-ghost inline-flex items-center gap-2">
+        <span>👈</span> <span>Back to Dashboard</span>
+    </a>
+</div>
+
+<style>
+    .badge-happy    { background: var(--color-meadow-light); color: #1E7E4A; }
+    .badge-resting  { background: var(--color-sunflower-light); color: #9A6200; }
+    .badge-unwell   { background: var(--color-rosewood-light); color: #B5202E; }
+</style>
 {% endblock %}

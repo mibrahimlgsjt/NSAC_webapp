@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <div class="mb-10 stagger-card">
+        <h1 class="text-4xl font-extrabold text-ink mb-2">
+            {{ 'Edit' if animal else 'Add' }} Companion 🐾
+        </h1>
+        <p class="text-muted font-medium">Keep the campus companion records up to date.</p>
+    </div>
+
+    <div class="bg-paper p-8 rounded-lg shadow-card border-t-[8px] border-paw stagger-card" style="animation-delay: 0.1s">
+        <form method="POST" enctype="multipart/form-data" class="space-y-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Left Column -->
+                <div class="space-y-6">
+                    <div class="space-y-2">
+                        <label class="form-label">Name</label>
+                        <input type="text" name="name" value="{{ animal.name if animal else '' }}" required
+                               class="form-input" placeholder="e.g. Bruno">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="form-label">Species</label>
+                        <input type="text" name="species" value="{{ animal.species if animal else 'Cat' }}" required
+                               class="form-input" placeholder="e.g. Cat, Dog">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="form-label">Sector</label>
+                        <select name="sector" required class="form-input">
+                            {% for s in ['C1', 'C2', 'NBS', 'SEECS', 'SADA', 'SMME', 'Retro'] %}
+                                <option value="{{ s }}" {{ 'selected' if animal and animal.sector == s else '' }}>{{ s }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="form-label">Personality Tags</label>
+                        <input type="text" name="personality_tags" value="{{ animal.personality_tags if animal else '' }}"
+                               class="form-input" placeholder="e.g. Friendly, Bold, Gentle">
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="space-y-6">
+                    <div class="space-y-2">
+                        <label class="form-label">Current Mood</label>
+                        <select name="mood" required class="form-input">
+                            <option value="Friendly" {{ 'selected' if animal and animal.mood == 'Friendly' else '' }}>Friendly 🐾</option>
+                            <option value="Shy" {{ 'selected' if animal and animal.mood == 'Shy' else '' }}>Shy 😴</option>
+                            <option value="Unwell" {{ 'selected' if animal and animal.mood == 'Unwell' else '' }}>Unwell 🌡️</option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="form-label">Health Status</label>
+                        <input type="text" name="health_status" value="{{ animal.health_status if animal else 'Healthy' }}" required
+                               class="form-input" placeholder="e.g. Healthy, Under Treatment">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="form-label">Photo</label>
+                        <input type="file" name="image" accept="image/*" class="form-input file:mr-4 file:py-2 file:px-4 file:rounded-pill file:border-0 file:text-sm file:font-bold file:bg-paw/10 file:text-paw hover:file:bg-paw/20">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-4 pt-4">
+                <a href="{{ url_for('admin.animals_list') }}" class="btn-ghost flex-1 py-4">Cancel</a>
+                <button type="submit" class="btn-primary flex-1 py-4 shadow-paw">
+                    {{ 'Update' if animal else 'Create' }} Companion 🐾
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .form-label {
+        @apply block font-display font-bold text-sm text-ink mb-1.5 ml-1;
+    }
+    .form-input {
+        @apply w-full bg-cream border-2 border-ink/10 rounded-md px-4 py-3.5 font-body text-ink outline-none transition-all focus:border-paw focus:shadow-[0_0_0_4px_var(--color-paw-light)];
+    }
+</style>
+{% endblock %}

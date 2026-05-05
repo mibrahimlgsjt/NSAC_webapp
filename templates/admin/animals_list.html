@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-10 flex flex-col md:flex-row md:items-center justify-between stagger-card">
+    <div>
+        <h1 class="text-4xl font-extrabold text-ink mb-2">Animal Directory 🐾</h1>
+        <p class="text-muted font-medium">Manage all campus companions.</p>
+    </div>
+    <div class="mt-6 md:mt-0">
+        <a href="{{ url_for('admin.animal_add') }}" class="btn-primary flex items-center gap-2 py-3 px-6 shadow-paw">
+            <span class="text-xl">＋</span> <span>Add New Animal</span>
+        </a>
+    </div>
+</div>
+
+<div class="bg-paper rounded-lg shadow-card overflow-hidden border border-ink/5 stagger-card" style="animation-delay: 0.1s">
+    <table class="w-full text-left">
+        <thead class="bg-cream border-b border-ink/5">
+            <tr>
+                <th class="px-6 py-4 text-[10px] font-bold text-muted uppercase tracking-widest">Animal</th>
+                <th class="px-6 py-4 text-[10px] font-bold text-muted uppercase tracking-widest">Sector</th>
+                <th class="px-6 py-4 text-[10px] font-bold text-muted uppercase tracking-widest">Status</th>
+                <th class="px-6 py-4 text-[10px] font-bold text-muted uppercase tracking-widest text-right">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-ink/5">
+            {% for animal in animals %}
+            <tr class="data-row hover:bg-cream/50 transition-colors">
+                <td class="px-6 py-4">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-md overflow-hidden bg-cream border border-ink/5 shadow-inner">
+                            {% if animal.image_url %}
+                                <img src="{{ animal.image_url }}" class="w-full h-full object-cover">
+                            {% else %}
+                                <div class="w-full h-full flex items-center justify-center text-xl opacity-30">🐾</div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <span class="font-extrabold text-ink block">{{ animal.name }}</span>
+                            <span class="text-xs text-muted font-medium">{{ animal.species }}</span>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-6 py-4">
+                    <span class="text-sm font-bold text-ink">{{ animal.sector }}</span>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="badge {{ 'badge-happy' if animal.mood == 'Friendly' else 'badge-resting' if animal.mood == 'Shy' else 'badge-unwell' }}">
+                        <span>{{ animal.mood }}</span>
+                    </div>
+                </td>
+                <td class="px-6 py-4 text-right">
+                    <div class="flex justify-end gap-2">
+                        <a href="{{ url_for('admin.animal_edit', animal_id=animal.id) }}" class="p-2 hover:bg-paw/10 rounded-md text-paw transition-colors" title="Edit">
+                            <span>✏️</span>
+                        </a>
+                        {% if current_user.role == 'admin' %}
+                        <form action="{{ url_for('admin.animal_delete', animal_id=animal.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete {{ animal.name }}? This cannot be undone.');">
+                            <button type="submit" class="p-2 hover:bg-rosewood/10 rounded-md text-rosewood transition-colors" title="Delete">
+                                <span>🗑️</span>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="mt-8 stagger-card" style="animation-delay: 0.2s">
+    <a href="{{ url_for('admin.panel') }}" class="btn-ghost inline-flex items-center gap-2">
+        <span>👈</span> <span>Back to Dashboard</span>
+    </a>
+</div>
+
+<style>
+    .badge-happy    { background: var(--color-meadow-light); color: #1E7E4A; }
+    .badge-resting  { background: var(--color-sunflower-light); color: #9A6200; }
+    .badge-unwell   { background: var(--color-rosewood-light); color: #B5202E; }
+</style>
+{% endblock %}

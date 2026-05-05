@@ -4,6 +4,7 @@
 <div x-data="{ 
     search: '',
     filter: 'All',
+    isFocused: false,
     animals: [
         {% for animal in animals %}
         {
@@ -13,6 +14,7 @@
             tags: '{{ animal.personality_tags }}',
             mood: '{{ animal.mood }}',
             image: '{{ animal.image_url or '' }}',
+            blurhash: '{{ animal.blurhash or '' }}',
             url: '{{ url_for('public.animal_detail', animal_id=animal.id) }}'
         },
         {% endfor %}
@@ -27,21 +29,29 @@
     }
 }">
     <!-- Header & Search -->
-    <div class="mb-10">
-        <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-6">Campus Encyclopedia 📖</h1>
+    <div class="mb-10 stagger-card" style="animation-delay: 0.05s">
+        <h1 class="text-4xl md:text-5xl font-extrabold text-ink mb-6">Campus Encyclopedia 📖</h1>
         
-        <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
-            <div class="relative flex-grow">
-                <input type="text" x-model="search" placeholder="Search by name or trait (e.g. 'Playful')..." 
-                       class="w-full pl-14 pr-6 py-5 glass rounded-[2rem] focus:ring-4 focus:ring-digital-lavender/30 outline-none transition-all font-medium text-lg">
-                <span class="absolute left-6 top-1/2 -translate-y-1/2 text-2xl">🔍</span>
+        <div class="flex flex-col space-y-6">
+            <!-- Search Bar -->
+            <div class="relative group max-w-2xl">
+                <input type="text" x-model="search" 
+                       @focus="isFocused = true" @blur="isFocused = false"
+                       placeholder="Search by name or trait (e.g. 'Playful')..." 
+                       class="w-full pl-14 pr-6 py-5 bg-paper border-2 border-ink/10 rounded-pill outline-none transition-all font-medium text-lg focus:border-paw focus:shadow-[0_0_0_4px_var(--color-paw-light)]">
+                <span class="absolute left-6 top-1/2 -translate-y-1/2 text-2xl transition-transform duration-300"
+                      :class="isFocused ? 'scale-125 rotate-12' : ''">
+                    <span x-show="!isFocused">🔍</span>
+                    <span x-show="isFocused" x-cloak>🐾</span>
+                </span>
             </div>
             
-            <div class="flex space-x-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+            <!-- Filter Chips -->
+            <div class="flex space-x-3 overflow-x-auto pb-4 scrollbar-hide">
                 <template x-for="f in ['All', 'C1', 'C2', 'NBS', 'SEECS', 'SADA', 'SMME', 'Retro']">
                     <button @click="filter = f" 
-                            :class="filter === f ? 'bg-digital-lavender text-white shadow-lg shadow-lavender-200' : 'glass text-gray-500 hover:text-gray-700'"
-                            class="px-6 py-3 rounded-2xl font-bold text-sm transition-all whitespace-nowrap"
+                            class="tag-pill py-2 px-6 text-sm transition-all whitespace-nowrap"
+                            :class="filter === f ? 'bg-paw text-white shadow-paw scale-105' : 'bg-paper text-muted border-2 border-ink/5 hover:border-paw/30'"
                             x-text="f"></button>
                 </template>
             </div>
@@ -50,34 +60,71 @@
 
     <!-- Results Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        <template x-for="animal in filteredAnimals" :key="animal.id">
+        <template x-for="(animal, index) in filteredAnimals" :key="animal.id">
             <a :href="animal.url" 
-               class="glass p-4 rounded-[2.5rem] flex flex-col hover:shadow-xl transition-all duration-300 group hover:-translate-y-1">
-                <div class="relative h-48 w-full rounded-[2rem] overflow-hidden mb-4 bg-gray-100">
+               class="animal-card flex flex-col p-4 stagger-card"
+               :style="'animation-delay: ' + (0.1 + (index * 0.05)) + 's'">
+                <div class="relative h-56 w-full rounded-md overflow-hidden mb-4 shadow-inner bg-gray-100"
+                     x-data="{ loaded: false }"
+                     x-init="if(animal.blurhash) { $el.style.backgroundImage = 'url(' + decodeBlurHash(animal.blurhash, 32, 32) + ')'; $el.style.backgroundSize = 'cover' }">
                     <template x-if="animal.image">
-                        <img :src="animal.image" :alt="animal.name" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                        <img :src="animal.image" :alt="animal.name" 
+                             class="w-full h-full object-cover transition duration-500"
+                             @load="loaded = true"
+                             :class="{ 'opacity-0': !loaded, 'opacity-100': loaded }">
                     </template>
                     <template x-if="!animal.image">
-                        <div class="w-full h-full flex items-center justify-center text-5xl opacity-50">🐾</div>
+                        <div class="w-full h-full flex items-center justify-center text-5xl opacity-30">🐾</div>
                     </template>
+
+                    <!-- Mood Badge overlay -->
+                    <div class="absolute bottom-3 left-3">
+                        <div class="badge" 
+                             :class="{
+                                'badge-happy': animal.mood === 'Friendly',
+                                'badge-resting': animal.mood === 'Shy',
+                                'badge-unwell': animal.mood === 'Unwell'
+                             }">
+                            <span x-text="animal.mood === 'Friendly' ? '🐾' : (animal.mood === 'Shy' ? '😴' : '🌡️')"></span>
+                            <span x-text="animal.mood"></span>
+                        </div>
+                    </div>
                 </div>
                 
-                <div class="px-2">
-                    <div class="flex items-center justify-between mb-1">
-                        <h3 class="text-xl font-bold text-gray-800 dark:text-white" x-text="animal.name"></h3>
-                        <span class="text-[10px] font-bold text-gray-400 uppercase" x-text="animal.sector"></span>
+                <div class="px-1">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-xl font-extrabold text-ink leading-none" x-text="animal.name"></h3>
+                        <div class="text-[10px] font-bold text-muted bg-cream px-2 py-0.5 rounded-full border border-ink/5" x-text="animal.sector"></div>
                     </div>
-                    <p class="text-sm text-gray-500 line-clamp-1 italic" x-text="animal.tags"></p>
+                    <div class="flex flex-wrap gap-1.5">
+                        <template x-for="tag in animal.tags.split(',').slice(0, 3)">
+                            <span class="tag-pill py-1 px-3 text-[10px]" x-text="'#' + tag.trim()"></span>
+                        </template>
+                    </div>
                 </div>
             </a>
         </template>
     </div>
 
     <!-- Empty State -->
-    <div x-show="filteredAnimals.length === 0" class="py-20 text-center glass rounded-[3rem]">
-        <span class="text-6xl mb-4 block">🔍</span>
-        <h3 class="text-xl font-bold text-gray-800">No companions found</h3>
-        <p class="text-gray-500">Try adjusting your search or filters.</p>
+    <div x-show="filteredAnimals.length === 0" 
+         class="py-24 text-center bg-paper rounded-lg border-2 border-dashed border-ink/10 stagger-card">
+        <div class="inline-block p-8 bg-cream rounded-full mb-6 relative">
+            <span class="text-7xl block">🥣</span>
+            <div class="absolute -top-2 -right-2 text-4xl animate-bounce">❓</div>
+        </div>
+        <h3 class="text-2xl font-extrabold text-ink mb-2">No friends here… yet!</h3>
+        <p class="text-muted font-medium mb-8">Try checking another sector or searching for a different trait like "Gentle" or "Bold".</p>
+        <button @click="search = ''; filter = 'All'" class="btn-secondary">Show all companions 🐾</button>
     </div>
 </div>
+
+<style>
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    .badge-happy    { background: var(--color-meadow-light); color: #1E7E4A; }
+    .badge-resting  { background: var(--color-sunflower-light); color: #9A6200; }
+    .badge-unwell   { background: var(--color-rosewood-light); color: #B5202E; }
+</style>
 {% endblock %}

@@ -1,0 +1,12 @@
+{
+  "name": "nsac-campus-companions-mern-refactor",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Two-day MERN refactor scaffold for the NSAC Campus Companions project.",
+  "scripts": {
+    "install:all": "npm --prefix server install && npm --prefix client install",
+    "check:server": "npm --prefix server run check",
+    "build:client": "npm --prefix client run build",
+    "build": "npm --prefix server run check && npm --prefix client run build"
+  }
+}

@@ -1,92 +1,119 @@
 {% extends "base.html" %}
 
 {% block content %}
-<!-- Welcome Section -->
-<div class="mb-10">
-    <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-digital-lavender to-purple-600 mb-2">Welcome Back! 👋</h1>
-    <p class="text-gray-500 font-medium">NUST Campus is alive and well. See who's been spotted recently.</p>
+<!-- Hero Section -->
+<div class="pt-6 pb-12 text-center md:text-left stagger-card" style="animation-delay: 0.05s">
+    <h1 class="text-4xl md:text-6xl font-extrabold text-ink mb-4 leading-tight">
+        Hey there,<br>campus friend! 🐾
+    </h1>
+    <p class="text-lg text-muted font-medium mb-8 max-w-lg mx-auto md:mx-0">
+        NUST is home to many furry companions. Join us in keeping them fed, healthy, and happy!
+    </p>
+    
+    <!-- Quick CTA Strip -->
+    <div class="flex flex-col sm:flex-row gap-4 justify-center md:justify-start mb-4">
+        <a href="/admin" class="btn-primary flex items-center justify-center gap-2">
+            <span>🍚</span> Log a Feeding
+        </a>
+        <a href="/report" class="btn-secondary flex items-center justify-center gap-2">
+            <span>🚨</span> Report Emergency
+        </a>
+    </div>
 </div>
 
+<!-- Wave Divider -->
+<svg viewBox="0 0 1200 60" preserveAspectRatio="none" class="section-wave mb-8">
+  <path d="M0,30 C300,60 900,0 1200,30 L1200,60 L0,60 Z" fill="var(--color-paper)"/>
+</svg>
+
 <!-- Feeding Status Grid -->
-<div class="mb-12">
+<div class="mb-12 stagger-card" style="animation-delay: 0.1s">
     <div class="flex items-center justify-between mb-6">
-        <h2 class="text-2xl font-bold text-gray-800 dark:text-white flex items-center">
+        <h2 class="text-2xl font-bold text-ink flex items-center paw-accent">
             <span class="mr-2">🍽️</span> Feeding Status
         </h2>
-        <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Last 4 Hours</span>
+        <span class="text-xs font-bold text-muted uppercase tracking-widest">Live Updates</span>
     </div>
     
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {% for sector, status in feeding_status.items() %}
-        <div class="glass p-5 rounded-[2rem] flex flex-col items-center justify-center transition hover:scale-105 group relative overflow-hidden">
-            {% if status == 'fed' %}
-                <div class="absolute inset-0 bg-neo-mint/10 opacity-0 group-hover:opacity-100 transition"></div>
-                <div class="w-12 h-12 bg-neo-mint/20 rounded-2xl flex items-center justify-center mb-3 text-2xl">✅</div>
-                <span class="font-bold text-gray-800 dark:text-white">{{ sector }}</span>
-                <span class="text-[10px] font-bold text-neo-mint uppercase mt-1">Full & Happy</span>
-            {% else %}
-                <div class="absolute inset-0 bg-hyper-coral/10 opacity-0 group-hover:opacity-100 transition"></div>
-                <div class="w-12 h-12 bg-hyper-coral/20 rounded-2xl flex items-center justify-center mb-3 text-2xl">🥣</div>
-                <span class="font-bold text-gray-800 dark:text-white">{{ sector }}</span>
-                <span class="text-[10px] font-bold text-hyper-coral uppercase mt-1">Hungry Soon</span>
-            {% endif %}
-        </div>
+        {% for sector, hours in feeding_status.items() %}
+        <a href="/directory?sector={{ sector }}" 
+           class="p-5 rounded-lg flex flex-col items-center justify-center transition-all duration-300 hover:-translate-y-1 hover:shadow-lg
+                  {{ 'bg-meadow-light sector-safe' if hours < 3 else 'bg-sunflower-light sector-warning' if hours < 6 else 'bg-rosewood-light sector-critical' }}">
+            <div class="bowl-icon text-4xl mb-2 transition-transform duration-300">
+                {{ '🍚' if hours < 3 else '🥣' if hours < 6 else '💔' }}
+            </div>
+            <span class="font-bold text-ink">{{ sector }}</span>
+            <span class="text-xs font-bold text-muted opacity-80 mt-1 uppercase">
+                {% if hours < 3 %}Full & Happy{% elif hours < 6 %}Hungry Soon{% else %}Overdue{% endif %}
+            </span>
+        </a>
         {% endfor %}
     </div>
 </div>
 
-<!-- Trending Animals Carousel -->
-<div class="mb-12" x-data="{ active: 0 }">
+<!-- Wave Divider Reverse -->
+<svg viewBox="0 0 1200 60" preserveAspectRatio="none" class="section-wave mb-8 rotate-180">
+  <path d="M0,30 C300,60 900,0 1200,30 L1200,60 L0,60 Z" fill="var(--color-paper)"/>
+</svg>
+
+<!-- Popular Animals Carousel -->
+<div class="mb-12 stagger-card" style="animation-delay: 0.15s">
     <div class="flex items-center justify-between mb-6">
-        <h2 class="text-2xl font-bold text-gray-800 dark:text-white flex items-center">
-            <span class="mr-2">🔥</span> Trending Companions
+        <h2 class="text-2xl font-bold text-ink flex items-center paw-accent">
+            <span class="mr-2">Popular this week ✨</span>
         </h2>
-        <a href="{{ url_for('public.directory') }}" class="text-digital-lavender font-bold text-sm hover:underline">View All</a>
+        <a href="{{ url_for('public.directory') }}" class="text-paw font-bold text-sm hover:underline">View All</a>
     </div>
 
-    <div class="flex space-x-6 overflow-x-auto pb-8 scrollbar-hide snap-x">
-        {% for animal in animals %}
-        <a href="{{ url_for('public.animal_detail', animal_id=animal.id) }}" 
-           class="min-w-[280px] glass rounded-[2.5rem] p-4 flex flex-col snap-center hover:shadow-xl transition-all duration-300 group">
-            <div class="relative h-64 w-full rounded-[2rem] overflow-hidden mb-4 shadow-inner bg-gray-200"
+    <div class="relative group">
+        <!-- Fade Masks -->
+        <div class="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-cream to-transparent z-10 pointer-events-none"></div>
+        <div class="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-cream to-transparent z-10 pointer-events-none"></div>
+        
+        <div class="flex space-x-6 overflow-x-auto pb-8 scrollbar-hide snap-x px-4">
+            {% for animal in animals %}
+            <a href="{{ url_for('public.animal_detail', animal_id=animal.id) }}" 
+               class="min-w-[280px] animal-card flex flex-col snap-center p-4">
+            <div class="relative h-64 w-full rounded-md overflow-hidden mb-4 shadow-inner bg-gray-100"
                  x-data="{ loaded: false, placeholder: '{{ animal.blurhash if animal.blurhash else '' }}' }"
                  x-init="if(placeholder) { $el.style.backgroundImage = 'url(' + decodeBlurHash(placeholder, 32, 32) + ')'; $el.style.backgroundSize = 'cover' }">
                 {% if animal.image_url %}
                     <img src="{{ animal.image_url }}" alt="{{ animal.name }}" 
-                         class="w-full h-full object-cover group-hover:scale-110 transition duration-500"
+                         class="w-full h-full object-cover"
                          @load="loaded = true"
                          :class="{ 'opacity-0': !loaded, 'opacity-100': loaded }">
                 {% else %}
-                    <div class="w-full h-full flex items-center justify-center text-6xl">🐾</div>
+                    <div class="w-full h-full flex items-center justify-center text-6xl opacity-30">🐾</div>
                 {% endif %}
                 
                 <!-- Mood Badge overlay -->
-                <div class="absolute top-4 right-4 bg-white/60 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-bold shadow-sm flex items-center space-x-1">
-                    <span>{{ '🟢' if animal.mood == 'Friendly' else '🟡' if animal.mood == 'Shy' else '🔴' }}</span>
-                    <span>{{ animal.mood }}</span>
+                <div class="absolute bottom-4 left-4">
+                    <div class="badge {{ 'badge-happy' if animal.mood == 'Friendly' else 'badge-resting' if animal.mood == 'Shy' else 'badge-unwell' }}">
+                        <span>{{ '🐾' if animal.mood == 'Friendly' else '😴' if animal.mood == 'Shy' else '🌡️' }}</span>
+                        <span>{{ animal.mood }}</span>
+                    </div>
                 </div>
             </div>
             
-            <div class="px-2">
-                <div class="flex items-center justify-between mb-1">
-                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">{{ animal.name }}</h3>
-                    <div class="bg-digital-lavender/20 text-digital-lavender px-3 py-1 rounded-xl text-[10px] font-bold uppercase tracking-tighter">
+            <div class="px-1">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-xl font-extrabold text-ink leading-none">{{ animal.name }}</h3>
+                    <div class="text-xs font-bold text-muted bg-cream px-2 py-0.5 rounded-full border border-ink/5">
                         {{ animal.sector }}
                     </div>
                 </div>
-                <p class="text-sm text-gray-500 line-clamp-1 mb-3">
-                    {% for tag in animal.personality_tags.split(',') %}
-                        #{{ tag.strip() }} 
-                    {% endfor %}
-                </p>
                 
-                <!-- Hunger Bar -->
-                <div class="w-full h-2 bg-gray-200/50 rounded-full overflow-hidden">
-                    <div class="h-full bg-gradient-to-r from-neo-mint to-digital-lavender" style="width: {{ animal.hunger_score }}%"></div>
+                <div class="flex flex-wrap gap-2 mb-4">
+                    {% for tag in animal.personality_tags.split(',')[:3] %}
+                        <span class="tag-pill">#{{ tag.strip() }}</span>
+                    {% endfor %}
                 </div>
-                <div class="flex justify-between mt-1 text-[9px] font-bold text-gray-400 uppercase">
-                    <span>Hunger Level</span>
-                    <span>{{ animal.hunger_score }}% Full</span>
+                
+                <!-- Fed Time Indicator -->
+                <div class="flex items-center gap-1.5 text-xs font-bold text-muted">
+                    <span class="text-base">🍚</span>
+                    <span>Fed 2h ago</span>
                 </div>
             </div>
         </a>
@@ -95,13 +122,28 @@
 </div>
 
 <!-- Emergency Quick Action -->
-<div class="glass-strong p-8 rounded-[3rem] shadow-lg flex flex-col md:flex-row items-center justify-between border-hyper-coral/20">
+<div class="bg-paper p-8 rounded-lg shadow-card flex flex-col md:flex-row items-center justify-between border-l-8 border-rosewood stagger-card" style="animation-delay: 0.2s">
     <div class="text-center md:text-left mb-6 md:mb-0">
-        <h3 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">Notice something urgent? 🚨</h3>
-        <p class="text-gray-500 font-medium">Report injuries, sickness, or immediate concerns to our volunteers.</p>
+        <h3 class="text-2xl font-extrabold text-ink mb-2">Notice something urgent? 🚨</h3>
+        <p class="text-muted font-medium">Report injuries, sickness, or immediate concerns to our volunteers.</p>
     </div>
-    <a href="{{ url_for('public.report') }}" class="bg-hyper-coral text-white px-10 py-5 rounded-3xl font-bold shadow-[0_10px_30px_-5px_rgba(255,111,97,0.4)] hover:shadow-[0_15px_40px_-5px_rgba(255,111,97,0.6)] hover:-translate-y-1 transition-all active:scale-95">
+    <a href="{{ url_for('public.report') }}" class="btn-primary bg-rosewood shadow-[0_4px_16px_rgba(224,92,106,0.35)]">
         Submit Report
     </a>
 </div>
+
+<style>
+    /* Custom scrollbar hide */
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    
+    .badge-happy    { background: var(--color-meadow-light); color: #1E7E4A; }
+    .badge-resting  { background: var(--color-sunflower-light); color: #9A6200; }
+    .badge-unwell   { background: var(--color-rosewood-light); color: #B5202E; }
+</style>
 {% endblock %}

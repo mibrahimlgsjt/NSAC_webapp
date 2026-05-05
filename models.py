@@ -24,6 +24,7 @@ class Animal(db.Model):
     image_url = db.Column(db.String(500), nullable=True)
     last_fed_at = db.Column(db.DateTime, nullable=True)
     blurhash = db.Column(db.String(50), nullable=True)
+    likes = db.Column(db.Integer, default=0)
     personality_tags = db.Column(db.Text, default="Friendly,Sleepy")  # Comma separated
 
     # Relationships

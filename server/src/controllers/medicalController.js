@@ -16,6 +16,22 @@ const listMedicalLogs = asyncHandler(async (req, res) => {
   res.json(logs);
 });
 
+const exportMedicalLogs = asyncHandler(async (req, res) => {
+  const logs = await MedicalLog.find()
+    .populate("animal", "name")
+    .populate("volunteer", "username")
+    .sort({ openedAt: -1 });
+
+  let csv = "ID,Animal,Volunteer,Status,Description,OpenedAt,ClosedAt,Cost\n";
+  logs.forEach((log) => {
+    csv += `${log._id},"${log.animal?.name || "Unknown"}","${log.volunteer?.username || "Unknown"}",${log.status},"${log.description.replace(/"/g, '""')}",${log.openedAt.toISOString()},${log.closedAt ? log.closedAt.toISOString() : ""},${log.cost}\n`;
+  });
+
+  res.header("Content-Type", "text/csv");
+  res.attachment("medical_logs.csv");
+  res.send(csv);
+});
+
 const createMedicalLog = asyncHandler(async (req, res) => {
   const animal = await Animal.findById(req.body.animal || req.body.animalId);
   if (!animal) {
@@ -69,6 +85,7 @@ const closeMedicalLog = asyncHandler(async (req, res) => {
 
 module.exports = {
   listMedicalLogs,
+  exportMedicalLogs,
   createMedicalLog,
   closeMedicalLog
 };

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-xl mx-auto">
+    <div class="mb-10 stagger-card">
+        <h1 class="text-4xl font-extrabold text-ink mb-2">
+            {{ 'Edit' if item else 'Add' }} Supply 📦
+        </h1>
+        <p class="text-muted font-medium">Manage the club's inventory and stock levels.</p>
+    </div>
+
+    <div class="bg-paper p-8 rounded-lg shadow-card border-t-[8px] border-sunflower stagger-card" style="animation-delay: 0.1s">
+        <form method="POST" class="space-y-6">
+            <div class="space-y-2">
+                <label class="form-label">Item Name</label>
+                <input type="text" name="name" value="{{ item.name if item else '' }}" required
+                       class="form-input" placeholder="e.g. Cat Food (Kitten)">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-2">
+                    <label class="form-label">Category</label>
+                    <select name="category" required class="form-input">
+                        <option value="A" {{ 'selected' if item and item.category == 'A' else '' }}>A (Critical)</option>
+                        <option value="B" {{ 'selected' if item and item.category == 'B' else '' }}>B (Standard)</option>
+                        <option value="C" {{ 'selected' if item and item.category == 'C' else '' }}>C (Low Priority)</option>
+                    </select>
+                </div>
+                <div class="space-y-2">
+                    <label class="form-label">Unit</label>
+                    <input type="text" name="unit" value="{{ item.unit if item else 'kg' }}" required
+                           class="form-input" placeholder="e.g. kg, cans, packs">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-2">
+                    <label class="form-label">Current Quantity</label>
+                    <input type="number" name="quantity" value="{{ item.quantity if item else 0 }}" step="0.1" required
+                           class="form-input">
+                </div>
+                <div class="space-y-2">
+                    <label class="form-label">Low Stock Threshold</label>
+                    <input type="number" name="threshold" value="{{ item.low_stock_threshold if item else 5 }}" step="0.1" required
+                           class="form-input">
+                </div>
+            </div>
+
+            <div class="flex gap-4 pt-4">
+                <a href="{{ url_for('admin.inventory') }}" class="btn-ghost flex-1 py-4">Cancel</a>
+                <button type="submit" class="btn-primary flex-1 py-4 bg-sunflower shadow-none text-ink">
+                    {{ 'Update' if item else 'Create' }} Item 📦
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .form-label {
+        @apply block font-display font-bold text-sm text-ink mb-1.5 ml-1;
+    }
+    .form-input {
+        @apply w-full bg-cream border-2 border-ink/10 rounded-md px-4 py-3.5 font-body text-ink outline-none transition-all focus:border-paw focus:shadow-[0_0_0_4px_var(--color-paw-light)];
+    }
+</style>
+{% endblock %}

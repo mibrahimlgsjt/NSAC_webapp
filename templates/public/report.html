@@ -1,87 +1,152 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto py-10" x-data="{ severity: 'minor_injury' }">
+<div class="max-w-2xl mx-auto py-10" x-data="{
+    severity: 'minor_injury',
+    submitted: false,
+    loading: false,
+    submitReport() {
+        this.loading = true;
+        const formData = new FormData(this.$refs.reportForm);
+        
+        fetch(this.$refs.reportForm.action, {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                this.submitted = true;
+                this.$store.app.celebrate();
+            }
+        })
+        .finally(() => {
+            this.loading = false;
+        });
+    }
+}">
     <!-- Header -->
-    <div class="text-center mb-10">
-        <div class="inline-block p-5 bg-hyper-coral/20 rounded-[2rem] mb-4">
-            <span class="text-5xl">🚨</span>
+    <div class="text-center mb-10 stagger-card" style="animation-delay: 0.05s">
+        <div class="inline-block p-6 bg-rosewood-light rounded-lg mb-4">
+            <span class="text-6xl" x-text="submitted ? '💚' : '🚨'"></span>
         </div>
-        <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-2">Emergency Report</h1>
-        <p class="text-gray-500 font-medium px-4">Spotted an animal in need? Let our volunteers know immediately.</p>
+        <h1 class="text-4xl md:text-5xl font-extrabold text-ink mb-3 leading-tight" x-text="submitted ? 'Help is on the way!' : 'Need help for an animal?'"></h1>
+        <p class="text-muted font-medium px-4" x-text="submitted ? 'Thank you for caring. Our volunteers have been notified.' : 'Stay calm! We\'re here to help. Tell our volunteers what\'s happening.'"></p>
     </div>
 
-    <form method="POST" action="{{ url_for('api.submit_emergency') }}" class="glass p-8 md:p-12 rounded-[3rem] shadow-2xl relative overflow-hidden">
-        <!-- Background Glow -->
-        <div class="absolute -bottom-20 -left-20 w-64 h-64 bg-hyper-coral opacity-10 blur-3xl"></div>
+    <!-- Success State -->
+    <div x-show="submitted" x-cloak class="text-center stagger-card" style="animation-delay: 0.1s">
+        <div class="bg-paper p-10 rounded-lg shadow-card border-2 border-meadow/20 mb-8">
+            <h3 class="text-2xl font-extrabold text-ink mb-4">Report Received 🐾</h3>
+            <p class="text-muted font-medium mb-8">We've dispatched an alert to our volunteer team. You can check for updates in the Encyclopedia or visit our mission control for more info.</p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="/" class="btn-primary">Back Home</a>
+                <a href="{{ url_for('public.directory') }}" class="btn-secondary">View Encyclopedia</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form State -->
+    <form x-show="!submitted" x-ref="reportForm" @submit.prevent="submitReport()" 
+          method="POST" action="{{ url_for('api.submit_emergency') }}" 
+          class="form-card stagger-card" style="animation-delay: 0.1s">
         
         <div class="space-y-8">
             <!-- Animal Selector -->
-            <div class="space-y-3">
-                <label class="block text-sm font-bold text-gray-600 dark:text-gray-400 ml-4 uppercase tracking-widest">Which animal?</label>
-                <select name="animal_id" 
-                        class="w-full px-6 py-5 glass rounded-[2rem] focus:ring-4 focus:ring-digital-lavender/30 outline-none transition-all appearance-none cursor-pointer">
-                    <option value="">I'm not sure / New Animal</option>
-                    {% for animal in animals %}
-                        <option value="{{ animal.id }}">{{ animal.name }} ({{ animal.sector }})</option>
-                    {% endfor %}
-                </select>
+            <div class="space-y-2">
+                <label class="form-label">Which friend needs help?</label>
+                <div class="relative">
+                    <select name="animal_id" 
+                            class="form-input appearance-none cursor-pointer">
+                        <option value="">I'm not sure / New Animal</option>
+                        {% for animal in animals %}
+                            <option value="{{ animal.id }}">{{ animal.name }} ({{ animal.sector }})</option>
+                        {% endfor %}
+                    </select>
+                    <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">🐾</div>
+                </div>
             </div>
 
             <!-- Severity Toggle -->
-            <div class="space-y-3">
-                <label class="block text-sm font-bold text-gray-600 dark:text-gray-400 ml-4 uppercase tracking-widest">How serious is it?</label>
-                <div class="grid grid-cols-3 gap-3">
+            <div class="space-y-2">
+                <label class="form-label">How serious is it?</label>
+                <div class="flex flex-wrap gap-3">
                     <button type="button" @click="severity = 'minor_injury'"
-                            :class="severity === 'minor_injury' ? 'bg-neo-mint/20 border-neo-mint/50 text-green-700' : 'glass opacity-50 text-gray-400'"
-                            class="py-4 rounded-2xl font-bold text-xs transition-all border border-transparent">
-                        Minor Injury
+                            :class="severity === 'minor_injury' ? 'bg-sunflower-light border-sunflower text-[#9A6200]' : 'bg-cream border-ink/5 text-muted'"
+                            class="flex-1 py-4 rounded-md font-display font-bold text-xs transition-all border-2">
+                        <span>🩹</span><br>Minor
                     </button>
                     <button type="button" @click="severity = 'sickness'"
-                            :class="severity === 'sickness' ? 'bg-yellow-100 border-yellow-300 text-yellow-700' : 'glass opacity-50 text-gray-400'"
-                            class="py-4 rounded-2xl font-bold text-xs transition-all border border-transparent">
-                        Sickness
+                            :class="severity === 'sickness' ? 'bg-lavender-light border-lavender text-[#5A4BAD]' : 'bg-cream border-ink/5 text-muted'"
+                            class="flex-1 py-4 rounded-md font-display font-bold text-xs transition-all border-2">
+                        <span>🌡️</span><br>Unwell
                     </button>
                     <button type="button" @click="severity = 'critical'"
-                            :class="severity === 'critical' ? 'bg-hyper-coral/20 border-hyper-coral/50 text-red-700' : 'glass opacity-50 text-gray-400'"
-                            class="py-4 rounded-2xl font-bold text-xs transition-all border border-transparent">
-                        Critical 🚨
+                            :class="severity === 'critical' ? 'bg-rosewood-light border-rosewood text-[#B5202E]' : 'bg-cream border-ink/5 text-muted'"
+                            class="flex-1 py-4 rounded-md font-display font-bold text-xs transition-all border-2">
+                        <span>🚨</span><br>Critical
                     </button>
                 </div>
                 <input type="hidden" name="severity" :value="severity">
             </div>
 
             <!-- Location -->
-            <div class="space-y-3">
-                <label class="block text-sm font-bold text-gray-600 dark:text-gray-400 ml-4 uppercase tracking-widest">Location Hint</label>
+            <div class="space-y-2">
+                <label class="form-label">Where did you spot them?</label>
                 <input type="text" name="location" required placeholder="e.g. Near C1 fountain, behind SEECS foyer"
-                       class="w-full px-6 py-5 glass rounded-[2rem] focus:ring-4 focus:ring-digital-lavender/30 outline-none transition-all">
+                       class="form-input">
             </div>
 
             <!-- Description -->
-            <div class="space-y-3">
-                <label class="block text-sm font-bold text-gray-600 dark:text-gray-400 ml-4 uppercase tracking-widest">Details</label>
-                <textarea name="description" rows="4" placeholder="What did you see? Any specific symptoms or visible injuries?"
-                          class="w-full px-6 py-5 glass rounded-[2rem] focus:ring-4 focus:ring-digital-lavender/30 outline-none transition-all resize-none"></textarea>
+            <div class="space-y-2">
+                <label class="form-label">Tell us more...</label>
+                <textarea name="description" rows="4" placeholder="What did you see? Any visible symptoms or injuries?"
+                          class="form-input resize-none"></textarea>
             </div>
 
             <!-- Reporter Name -->
-            <div class="space-y-3 pb-4">
-                <label class="block text-sm font-bold text-gray-600 dark:text-gray-400 ml-4 uppercase tracking-widest">Your Name (Optional)</label>
+            <div class="space-y-2 pb-2">
+                <label class="form-label">Your Name (Optional)</label>
                 <input type="text" name="reporter_name" placeholder="Leave blank to report anonymously"
-                       class="w-full px-6 py-5 glass rounded-[2rem] focus:ring-4 focus:ring-digital-lavender/30 outline-none transition-all">
+                       class="form-input">
             </div>
 
-            <button type="submit" 
-                    class="w-full py-5 bg-hyper-coral text-white font-bold rounded-[2rem] shadow-[0_15px_35px_-5px_rgba(255,111,97,0.4)] hover:shadow-[0_20px_50px_-5px_rgba(255,111,97,0.6)] hover:-translate-y-1 active:scale-95 transition-all duration-300 flex items-center justify-center space-x-3">
-                <span class="text-xl">🚀</span>
-                <span>Send Emergency Alert</span>
+            <button type="submit" :disabled="loading"
+                    class="w-full btn-primary bg-rosewood shadow-[0_4px_16px_rgba(224,92,106,0.35)] flex items-center justify-center gap-3 disabled:opacity-50 animate-[sos-ring_2.5s_ease-out_infinite]">
+                <span class="text-xl" x-show="!loading">🚀</span>
+                <span class="text-xl animate-spin" x-show="loading" x-cloak>⏳</span>
+                <span x-text="loading ? 'Sending Alert...' : 'Send Alert Now'"></span>
             </button>
             
-            <p class="text-[10px] text-center text-gray-400 font-bold uppercase tracking-tighter">
-                False reports may lead to IP blocking. Use responsibly.
+            <p class="text-[10px] text-center text-muted font-bold uppercase tracking-wider">
+                Thank you for being a campus hero! 💚
             </p>
         </div>
     </form>
 </div>
+
+<style>
+    body {
+        background-color: var(--color-rosewood-light);
+        background-image: radial-gradient(circle, rgba(224,92,106,0.1) 1px, transparent 1px);
+        background-size: 24px 24px;
+    }
+    
+    .form-card {
+        @apply bg-paper rounded-lg p-8 shadow-card border-2 border-rosewood/10;
+        background-image: repeating-linear-gradient(
+            transparent,
+            transparent 31px,
+            rgba(45,32,19,0.03) 32px
+        );
+    }
+
+    .form-label {
+        @apply block font-display font-bold text-sm text-ink mb-1.5 ml-1;
+    }
+
+    .form-input {
+        @apply w-full bg-cream border-2 border-ink/10 rounded-md px-4 py-3.5 font-body text-ink outline-none transition-all focus:border-paw focus:shadow-[0_0_0_4px_var(--color-paw-light)];
+    }
+</style>
 {% endblock %}

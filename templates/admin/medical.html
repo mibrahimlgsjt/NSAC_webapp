@@ -1,68 +1,94 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="mb-10 flex items-center justify-between">
-    <a href="{{ url_for('admin.panel') }}" class="inline-flex items-center space-x-2 text-gray-500 font-bold hover:text-digital-lavender transition group">
-        <span class="p-2 glass rounded-xl group-hover:-translate-x-1 transition">⬅️</span>
-        <span>Back to Panel</span>
-    </a>
-    <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Medical Case Manager 🩹</h1>
+<div class="mb-10 flex flex-col md:flex-row md:items-center justify-between stagger-card">
+    <div>
+        <h1 class="text-4xl font-extrabold text-ink mb-2">Medical Logs 🏥</h1>
+        <p class="text-muted font-medium">Track treatments and rescue costs for campus companions.</p>
+    </div>
+    <div class="mt-6 md:mt-0 flex gap-3">
+        <a href="{{ url_for('admin.export') }}" class="btn-ghost flex items-center gap-2 py-3 px-6">
+            <span>📊</span> <span>Export CSV</span>
+        </a>
+    </div>
 </div>
 
-<div class="glass rounded-[3rem] overflow-hidden shadow-xl">
+<div class="bg-paper rounded-lg shadow-card overflow-hidden border border-ink/5 stagger-card" style="animation-delay: 0.1s">
     <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-            <thead>
-                <tr class="bg-white/30 backdrop-blur-sm border-b border-white/20">
-                    <th class="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Animal</th>
-                    <th class="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Condition</th>
-                    <th class="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
-                    <th class="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Cost</th>
-                    <th class="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Timeline</th>
-                    <th class="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Actions</th>
+        <table class="w-full text-left">
+            <thead class="bg-cream border-b border-ink/5">
+                <tr>
+                    <th class="px-6 py-4 text-[10px] font-bold text-muted uppercase tracking-widest">Companion</th>
+                    <th class="px-6 py-4 text-[10px] font-bold text-muted uppercase tracking-widest">Status</th>
+                    <th class="px-6 py-4 text-[10px] font-bold text-muted uppercase tracking-widest">Description</th>
+                    <th class="px-6 py-4 text-[10px] font-bold text-muted uppercase tracking-widest">Timeline</th>
+                    <th class="px-6 py-4 text-[10px] font-bold text-muted uppercase tracking-widest text-right">Actions</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-white/10">
+            <tbody class="divide-y divide-ink/5">
                 {% for log in logs %}
-                <tr class="hover:bg-white/20 transition duration-150 group">
-                    <td class="px-8 py-6">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 bg-gray-100 rounded-xl overflow-hidden shadow-inner">
+                <tr class="data-row transition-colors">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-md overflow-hidden bg-cream border border-ink/5 shadow-inner flex-shrink-0">
                                 {% if log.animal.image_url %}
                                     <img src="{{ log.animal.image_url }}" class="w-full h-full object-cover">
                                 {% else %}
-                                    <div class="w-full h-full flex items-center justify-center text-xl">🐾</div>
+                                    <div class="w-full h-full flex items-center justify-center text-xl opacity-30">🐾</div>
                                 {% endif %}
                             </div>
-                            <span class="font-bold text-gray-800 dark:text-white">{{ log.animal.name }}</span>
+                            <div>
+                                <span class="font-extrabold text-ink block">{{ log.animal.name }}</span>
+                                <span class="text-[10px] font-bold text-muted uppercase">By {{ log.volunteer.username }}</span>
+                            </div>
                         </div>
                     </td>
-                    <td class="px-8 py-6">
-                        <span class="text-sm font-medium text-gray-600 dark:text-gray-300 line-clamp-1 max-w-[200px]">{{ log.description }}</span>
-                    </td>
-                    <td class="px-8 py-6">
-                        {% if log.status == 'open' %}
-                            <span class="bg-red-100 text-red-600 px-3 py-1 rounded-xl text-[10px] font-bold uppercase">Active Case</span>
-                        {% else %}
-                            <span class="bg-neo-mint/20 text-green-700 px-3 py-1 rounded-xl text-[10px] font-bold uppercase">Closed</span>
+                    <td class="px-6 py-4">
+                        <span class="badge {{ 'badge-unwell' if log.status == 'open' else 'badge-happy' }}">
+                            {{ 'Active' if log.status == 'open' else 'Resolved' }}
+                        </span>
+                        {% if log.status == 'closed' %}
+                            <span class="text-[10px] font-extrabold text-ink block mt-1">Cost: Rs. {{ log.cost }}</span>
                         {% endif %}
                     </td>
-                    <td class="px-8 py-6 font-bold text-gray-700 dark:text-white">Rs. {{ log.cost }}</td>
-                    <td class="px-8 py-6">
-                        <span class="text-[10px] font-bold text-gray-400 uppercase">Started: {{ log.opened_at.strftime('%d %b %Y') }}</span>
-                        {% if log.closed_at %}
-                            <span class="text-[10px] font-bold text-neo-mint uppercase block">Closed: {{ log.closed_at.strftime('%d %b %Y') }}</span>
-                        {% endif %}
+                    <td class="px-6 py-4 max-w-xs">
+                        <p class="text-sm text-ink/80 font-medium leading-snug line-clamp-2" title="{{ log.description }}">{{ log.description }}</p>
                     </td>
-                    <td class="px-8 py-6 text-right">
+                    <td class="px-6 py-4">
+                        <div class="flex flex-col gap-0.5">
+                            <span class="text-[9px] font-extrabold text-muted uppercase">Start: {{ log.opened_at.strftime('%d %b %Y') }}</span>
+                            {% if log.closed_at %}
+                                <span class="text-[9px] font-extrabold text-meadow uppercase">End: {{ log.closed_at.strftime('%d %b %Y') }}</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-right">
                         {% if log.status == 'open' %}
-                            <button class="p-2 glass rounded-xl text-digital-lavender hover:bg-digital-lavender hover:text-white transition group-hover:scale-110">
-                                ✏️
+                        <div x-data="{ open: false }">
+                            <button @click="open = true" class="btn-primary text-[10px] py-1.5 px-3 bg-lavender shadow-none tracking-widest uppercase">
+                                Close Case
                             </button>
+                            
+                            <!-- Mini Modal for closing -->
+                            <div x-show="open" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                                <div class="absolute inset-0 bg-ink/40 backdrop-blur-sm" @click="open = false"></div>
+                                <div class="bg-paper w-full max-w-sm rounded-lg shadow-hover border-2 border-lavender relative z-10 p-6 text-left">
+                                    <h3 class="text-xl font-extrabold text-ink mb-4">Finalize Treatment</h3>
+                                    <form action="{{ url_for('admin.medical_close', log_id=log.id) }}" method="POST" class="space-y-4">
+                                        <div class="space-y-1">
+                                            <label class="text-xs font-bold text-muted uppercase">Total Cost (Rs.)</label>
+                                            <input type="number" name="cost" step="0.01" value="0.00" required class="form-input text-sm">
+                                        </div>
+                                        <div class="flex gap-2">
+                                            <button type="button" @click="open = false" class="btn-ghost flex-1 py-3 text-sm">Cancel</button>
+                                            <button type="submit" class="btn-primary flex-1 py-3 text-sm bg-lavender shadow-none">Confirm Close</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
                         {% else %}
-                            <button class="p-2 glass rounded-xl opacity-30 cursor-not-allowed">
-                                🔒
-                            </button>
+                        <span class="text-xl" title="Resolved">✅</span>
                         {% endif %}
                     </td>
                 </tr>
@@ -71,4 +97,18 @@
         </table>
     </div>
 </div>
+
+<div class="mt-8 stagger-card" style="animation-delay: 0.2s">
+    <a href="{{ url_for('admin.panel') }}" class="btn-ghost inline-flex items-center gap-2">
+        <span>👈</span> <span>Back to Dashboard</span>
+    </a>
+</div>
+
+<style>
+    .badge-happy    { background: var(--color-meadow-light); color: #1E7E4A; }
+    .badge-unwell   { background: var(--color-rosewood-light); color: #B5202E; }
+    .form-input {
+        @apply w-full bg-cream border-2 border-ink/10 rounded-md px-4 py-3 font-body text-ink outline-none transition-all focus:border-paw focus:shadow-[0_0_0_4px_var(--color-paw-light)];
+    }
+</style>
 {% endblock %}
