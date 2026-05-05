@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-10 flex items-center justify-between">
+    <a href="{{ url_for('admin.panel') }}" class="inline-flex items-center space-x-2 text-gray-500 font-bold hover:text-digital-lavender transition group">
+        <span class="p-2 glass rounded-xl group-hover:-translate-x-1 transition">⬅️</span>
+        <span>Back to Panel</span>
+    </a>
+    <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Supply Registry 📦</h1>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+    <div class="glass p-6 rounded-[2rem] border-red-100">
+        <span class="w-8 h-8 bg-red-100 text-red-600 rounded-lg flex items-center justify-center font-bold text-xs mb-3">A</span>
+        <h3 class="font-bold text-gray-800">Critical Meds</h3>
+        <p class="text-xs text-gray-400">High value, life-saving items. Threshold: 5 units.</p>
+    </div>
+    <div class="glass p-6 rounded-[2rem] border-yellow-100">
+        <span class="w-8 h-8 bg-yellow-100 text-yellow-600 rounded-lg flex items-center justify-center font-bold text-xs mb-3">B</span>
+        <h3 class="font-bold text-gray-800">General Care</h3>
+        <p class="text-xs text-gray-400">Bandages, grooming, standard meds.</p>
+    </div>
+    <div class="glass p-6 rounded-[2rem] border-neo-mint">
+        <span class="w-8 h-8 bg-neo-mint/20 text-green-700 rounded-lg flex items-center justify-center font-bold text-xs mb-3">C</span>
+        <h3 class="font-bold text-gray-800">Kibble & Basics</h3>
+        <p class="text-xs text-gray-400">Food, water bowls, cleaning. Threshold: 10kg.</p>
+    </div>
+</div>
+
+<div class="glass rounded-[3rem] overflow-hidden shadow-xl">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-white/30 border-b border-white/20">
+                    <th class="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Category</th>
+                    <th class="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Item Name</th>
+                    <th class="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Stock Level</th>
+                    <th class="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-white/10">
+                {% for item in items %}
+                <tr class="hover:bg-white/20 transition duration-150">
+                    <td class="px-8 py-6">
+                        <span class="w-10 h-10 {% if item.category == 'A' %}bg-red-100 text-red-600{% elif item.category == 'B' %}bg-yellow-100 text-yellow-600{% else %}bg-neo-mint/20 text-green-700{% endif %} rounded-2xl flex items-center justify-center font-bold text-sm">
+                            {{ item.category }}
+                        </span>
+                    </td>
+                    <td class="px-8 py-6">
+                        <span class="font-bold text-gray-800 dark:text-white">{{ item.name }}</span>
+                    </td>
+                    <td class="px-8 py-6">
+                        {% set is_low = (item.category == 'A' and item.quantity < 5) or (item.category == 'C' and item.quantity < 10) %}
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xl font-bold {% if is_low %}text-hyper-coral{% else %}text-gray-700 dark:text-white{% endif %}">
+                                {{ item.quantity }}{{ item.unit }}
+                            </span>
+                            {% if is_low %}
+                                <span class="bg-hyper-coral/10 text-hyper-coral px-3 py-1 rounded-xl text-[9px] font-bold uppercase animate-pulse">Low Stock</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td class="px-8 py-6 text-right">
+                        <button class="px-4 py-2 glass rounded-xl text-digital-lavender font-bold text-xs hover:bg-digital-lavender hover:text-white transition">
+                            Update
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

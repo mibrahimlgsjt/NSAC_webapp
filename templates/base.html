@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NSAC Campus Companions</title>
+    <!-- PWA -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#A89ACD">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+    
+    <!-- Google Fonts: Baloo 2 and Nunito -->
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS v4 (using CDN for prototype) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- BlurHash Decoder -->
+    <script src="https://cdn.jsdelivr.net/npm/blurhash@2.0.5/dist/index.min.js"></script>
+
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('app', {
+                theme: localStorage.getItem('theme') || 'light',
+                hideNav: false,
+                toggleTheme() {
+                    this.theme = this.theme === 'light' ? 'dark' : 'light';
+                    localStorage.setItem('theme', this.theme);
+                },
+                celebrate() {
+                    const pawEmojis = ['🐾', '🍚', '💛', '🌿', '✨'];
+                    confetti({
+                        particleCount: 60,
+                        spread: 80,
+                        origin: { y: 0.6 },
+                        shapes: ['text'],
+                        scalar: 1.4,
+                        text: pawEmojis[Math.floor(Math.random() * pawEmojis.length)]
+                    });
+                    confetti({
+                        particleCount: 80,
+                        spread: 90,
+                        colors: ['#52B788', '#FF7B5C', '#F4A946', '#FDF6EC'],
+                        origin: { y: 0.55 }
+                    });
+                }
+            })
+        })
+
+        function decodeBlurHash(hash, width, height) {
+            const pixels = blurhash.decode(hash, width, height);
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            const imageData = ctx.createImageData(width, height);
+            imageData.data.set(pixels);
+            ctx.putImageData(imageData, 0, 0);
+            return canvas.toDataURL();
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @theme {
+            --color-cream: #FDF6EC;
+            --color-paper: #FFF9F2;
+            --color-ink: #2D2013;
+            --color-muted: #8C7B6B;
+            --color-paw: #FF7B5C;
+            --color-paw-light: #FFE4DC;
+            --color-meadow: #52B788;
+            --color-meadow-light: #D8F3DC;
+            --color-sunflower: #F4A946;
+            --color-sunflower-light: #FFF0CC;
+            --color-rosewood: #E05C6A;
+            --color-rosewood-light: #FDDDE0;
+            --color-lavender: #9B8FD9;
+            --color-lavender-light: #EAE7FA;
+
+            --font-display: 'Baloo 2', cursive;
+            --font-body: 'Nunito', sans-serif;
+
+            --radius-sm: 10px;
+            --radius-md: 18px;
+            --radius-lg: 28px;
+            --radius-pill: 9999px;
+
+            --shadow-card: 0 2px 12px rgba(45,32,19,0.08), 0 1px 3px rgba(45,32,19,0.04);
+            --shadow-hover: 0 8px 28px rgba(45,32,19,0.14), 0 2px 6px rgba(45,32,19,0.06);
+            --shadow-paw: 0 4px 16px rgba(255,123,92,0.35);
+        }
+
+        /* Base overrides */
+        @layer base {
+            body {
+                @apply bg-cream text-ink font-body transition-colors duration-500;
+                background-image: radial-gradient(circle, rgba(45,32,19,0.06) 1px, transparent 1px);
+                background-size: 24px 24px;
+            }
+            h1, h2, h3, h4, button, .badge, .nav-label {
+                @apply font-display;
+            }
+        }
+
+        /* Dark mode mapping */
+        .theme-dark {
+            --color-cream: #1A120B;
+            --color-paper: #2D2013;
+            --color-ink: #FDF6EC;
+            --color-muted: #A39284;
+        }
+
+        /* Global Components */
+        @layer components {
+            .btn-primary {
+                @apply bg-paw text-white rounded-pill px-7 py-3.5 font-display font-bold text-lg cursor-pointer shadow-paw transition-all duration-200 hover:-translate-y-0.5 hover:scale-105 active:scale-95 active:shadow-none;
+            }
+            .btn-secondary {
+                @apply bg-paw-light text-paw rounded-pill px-6 py-3 font-display font-semibold border-2 border-transparent transition-all duration-150 hover:border-paw;
+            }
+            .badge {
+                @apply inline-flex items-center gap-1.5 rounded-pill px-3 py-1 font-display font-bold text-[0.78rem] border-2 border-transparent shadow-[inset_0_1px_0_rgba(255,255,255,0.6)];
+            }
+            
+            .bottom-nav {
+                @apply fixed bottom-4 left-1/2 -translate-x-1/2 bg-ink rounded-pill px-6 py-2.5 flex gap-7 items-center shadow-[0_8px_32px_rgba(45,32,19,0.25)] z-50;
+            }
+            .nav-item {
+                @apply flex flex-col items-center gap-0.5 text-muted transition-all duration-200 min-w-[48px] py-1;
+            }
+            .nav-item.active {
+                @apply text-paw -translate-y-1;
+            }
+            .nav-item:active {
+                @apply scale-90 -translate-y-1;
+            }
+            .nav-label {
+                @apply text-[0.65rem] font-bold tracking-wider;
+            }
+            .nav-item.sos {
+                @apply bg-rosewood text-white rounded-pill px-4 py-2 mx-1 shadow-[0_0_0_0_rgba(224,92,106,0.5)] animate-[sos-ring_2.5s_ease-out_infinite];
+            }
+        }
+
+        @keyframes sos-ring {
+            0%   { box-shadow: 0 0 0 0 rgba(224,92,106, 0.55); }
+            60%  { box-shadow: 0 0 0 10px rgba(224,92,106, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(224,92,106, 0); }
+        }
+        
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body class="min-h-screen pb-24 md:pb-10 relative overflow-x-hidden"
+      x-data x-cloak
+      :class="{ 'theme-dark': $store.app.theme === 'dark' }">
+
+    <!-- Mobile Nav (Floating Pill) -->
+    <nav class="bottom-nav md:hidden" x-show="!$store.app.hideNav">
+        <a href="/" class="nav-item {{ 'active' if request.path == '/' }}">
+            <span class="text-xl">🏠</span>
+            <span class="nav-label">Home</span>
+        </a>
+        <a href="/directory" class="nav-item {{ 'active' if request.path == '/directory' }}">
+            <span class="text-xl">🐾</span>
+            <span class="nav-label">Find</span>
+        </a>
+        <a href="/report" class="nav-item sos">
+            <span class="text-xl">🚨</span>
+            <span class="nav-label">SOS</span>
+        </a>
+        <a href="/admin/inventory" class="nav-item {{ 'active' if '/inventory' in request.path }}">
+            <span class="text-xl">📦</span>
+            <span class="nav-label">Stock</span>
+        </a>
+        <a href="/admin" class="nav-item {{ 'active' if request.path == '/admin' and not '/inventory' in request.path }}">
+            <span class="text-xl">👤</span>
+            <span class="nav-label">Me</span>
+        </a>
+    </nav>
+
+    <main class="p-4 md:p-8 max-w-7xl mx-auto">
+        {% block content %}{% endblock %}
+    </main>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/sw.js');
+        }
+    </script>
+</body>
+</html>

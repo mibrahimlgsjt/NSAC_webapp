@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto py-10" x-data="{ severity: 'minor_injury' }">
+    <!-- Header -->
+    <div class="text-center mb-10">
+        <div class="inline-block p-5 bg-hyper-coral/20 rounded-[2rem] mb-4">
+            <span class="text-5xl">🚨</span>
+        </div>
+        <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-2">Emergency Report</h1>
+        <p class="text-gray-500 font-medium px-4">Spotted an animal in need? Let our volunteers know immediately.</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('api.submit_emergency') }}" class="glass p-8 md:p-12 rounded-[3rem] shadow-2xl relative overflow-hidden">
+        <!-- Background Glow -->
+        <div class="absolute -bottom-20 -left-20 w-64 h-64 bg-hyper-coral opacity-10 blur-3xl"></div>
+        
+        <div class="space-y-8">
+            <!-- Animal Selector -->
+            <div class="space-y-3">
+                <label class="block text-sm font-bold text-gray-600 dark:text-gray-400 ml-4 uppercase tracking-widest">Which animal?</label>
+                <select name="animal_id" 
+                        class="w-full px-6 py-5 glass rounded-[2rem] focus:ring-4 focus:ring-digital-lavender/30 outline-none transition-all appearance-none cursor-pointer">
+                    <option value="">I'm not sure / New Animal</option>
+                    {% for animal in animals %}
+                        <option value="{{ animal.id }}">{{ animal.name }} ({{ animal.sector }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Severity Toggle -->
+            <div class="space-y-3">
+                <label class="block text-sm font-bold text-gray-600 dark:text-gray-400 ml-4 uppercase tracking-widest">How serious is it?</label>
+                <div class="grid grid-cols-3 gap-3">
+                    <button type="button" @click="severity = 'minor_injury'"
+                            :class="severity === 'minor_injury' ? 'bg-neo-mint/20 border-neo-mint/50 text-green-700' : 'glass opacity-50 text-gray-400'"
+                            class="py-4 rounded-2xl font-bold text-xs transition-all border border-transparent">
+                        Minor Injury
+                    </button>
+                    <button type="button" @click="severity = 'sickness'"
+                            :class="severity === 'sickness' ? 'bg-yellow-100 border-yellow-300 text-yellow-700' : 'glass opacity-50 text-gray-400'"
+                            class="py-4 rounded-2xl font-bold text-xs transition-all border border-transparent">
+                        Sickness
+                    </button>
+                    <button type="button" @click="severity = 'critical'"
+                            :class="severity === 'critical' ? 'bg-hyper-coral/20 border-hyper-coral/50 text-red-700' : 'glass opacity-50 text-gray-400'"
+                            class="py-4 rounded-2xl font-bold text-xs transition-all border border-transparent">
+                        Critical 🚨
+                    </button>
+                </div>
+                <input type="hidden" name="severity" :value="severity">
+            </div>
+
+            <!-- Location -->
+            <div class="space-y-3">
+                <label class="block text-sm font-bold text-gray-600 dark:text-gray-400 ml-4 uppercase tracking-widest">Location Hint</label>
+                <input type="text" name="location" required placeholder="e.g. Near C1 fountain, behind SEECS foyer"
+                       class="w-full px-6 py-5 glass rounded-[2rem] focus:ring-4 focus:ring-digital-lavender/30 outline-none transition-all">
+            </div>
+
+            <!-- Description -->
+            <div class="space-y-3">
+                <label class="block text-sm font-bold text-gray-600 dark:text-gray-400 ml-4 uppercase tracking-widest">Details</label>
+                <textarea name="description" rows="4" placeholder="What did you see? Any specific symptoms or visible injuries?"
+                          class="w-full px-6 py-5 glass rounded-[2rem] focus:ring-4 focus:ring-digital-lavender/30 outline-none transition-all resize-none"></textarea>
+            </div>
+
+            <!-- Reporter Name -->
+            <div class="space-y-3 pb-4">
+                <label class="block text-sm font-bold text-gray-600 dark:text-gray-400 ml-4 uppercase tracking-widest">Your Name (Optional)</label>
+                <input type="text" name="reporter_name" placeholder="Leave blank to report anonymously"
+                       class="w-full px-6 py-5 glass rounded-[2rem] focus:ring-4 focus:ring-digital-lavender/30 outline-none transition-all">
+            </div>
+
+            <button type="submit" 
+                    class="w-full py-5 bg-hyper-coral text-white font-bold rounded-[2rem] shadow-[0_15px_35px_-5px_rgba(255,111,97,0.4)] hover:shadow-[0_20px_50px_-5px_rgba(255,111,97,0.6)] hover:-translate-y-1 active:scale-95 transition-all duration-300 flex items-center justify-center space-x-3">
+                <span class="text-xl">🚀</span>
+                <span>Send Emergency Alert</span>
+            </button>
+            
+            <p class="text-[10px] text-center text-gray-400 font-bold uppercase tracking-tighter">
+                False reports may lead to IP blocking. Use responsibly.
+            </p>
+        </div>
+    </form>
+</div>
+{% endblock %}

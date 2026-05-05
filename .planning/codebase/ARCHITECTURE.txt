@@ -1,0 +1,134 @@
+ARCHITECTURE
+Analysis Date: 2024-05-23
+
+SYSTEM OVERVIEW
+
+┌─────────────────────────────────────────────────────────────┐
+│                      Flask Web Server                        │
+├──────────────────┬──────────────────┬───────────────────────┤
+│   Public Views   │    API Routes    │     Admin Views       │
+│  `blueprints/    │  `blueprints/    │    `blueprints/       │
+│   public.py`     │   api.py`        │     admin.py`         │
+└────────┬─────────┴────────┬─────────┴──────────┬────────────┘
+         │                  │                     │
+         ▼                  ▼                     ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    Business Logic & Models                   │
+│         `models.py`, `utils/image_handler.py`                │
+└─────────────────────────────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                Database (SQLAlchemy ORM)                     │
+│                `extensions.py` (db)                          │
+└─────────────────────────────────────────────────────────────┘
+
+COMPONENT RESPONSIBILITIES
+
+Component: App Setup
+Responsibility: Flask app initialization, database connection config, and seeding
+File: app.py
+
+Component: Public Blueprint
+Responsibility: Renders frontend HTML views (Index, Directory, Report)
+File: blueprints/public.py
+
+Component: Admin Blueprint
+Responsibility: Admin dashboard, CSV exports, restricted views
+File: blueprints/admin.py
+
+Component: API Blueprint
+Responsibility: JSON endpoints for likes, sightings, feeding, and medical logs
+File: blueprints/api.py
+
+Component: Auth Blueprint
+Responsibility: Login and session management
+File: blueprints/auth.py
+
+Component: Models
+Responsibility: SQLAlchemy schema definitions and calculated properties
+File: models.py
+
+Component: Extensions
+Responsibility: Singleton instances for DB, cache, and LoginManager
+File: extensions.py
+
+Component: Image Handler
+Responsibility: Validates, resizes, calculates Blurhash, and uploads images
+File: utils/image_handler.py
+
+PATTERN OVERVIEW
+
+Overall: Model-View-Controller (MVC) adaptation (using Flask Blueprints).
+
+Key Characteristics:
+* Blueprints: Routing is logically grouped into public, admin, api, and auth.
+* Thick Models: Models contain property methods for calculated state (hunger_score, health_score).
+* Stateful Sessions: Authentication is managed via server-side sessions (Flask-Login).
+
+LAYERS
+
+Routing/Controllers Layer:
+* Purpose: Handles HTTP requests, permission checks, form parsing, and response generation (HTML/JSON).
+* Location: blueprints/
+* Contains: Flask view functions.
+* Depends on: models.py, utils/, extensions.py.
+
+Data Model Layer:
+* Purpose: Defines database schema and relationships.
+* Location: models.py
+* Contains: SQLAlchemy model classes.
+* Used by: All blueprints.
+
+Utility/Service Layer:
+* Purpose: External interactions and complex logic decoupled from route handlers.
+* Location: utils/
+* Contains: image_handler.py (Cloudinary, Pillow) and bloom_filter.py (rate limiting/voting checks).
+
+DATA FLOW
+
+Primary Request Path (Adding a Sighting)
+1. User submits a multipart form with an image to /api/sighting/upload (blueprints/api.py)
+2. API route calls save_image() (utils/image_handler.py) to process/upload to Cloudinary.
+3. API route creates a Sighting instance and updates the Animal's location.
+4. Database session is committed.
+5. JSON response is returned to the client.
+
+KEY ABSTRACTIONS
+
+Score Calculators:
+* Purpose: Abstracting the logic to determine an animal's well-being.
+* Examples: Animal.hunger_score, Animal.health_score (models.py)
+* Pattern: Computed properties using time deltas.
+
+Voting Rate Limiter:
+* Purpose: Prevent spam voting on tags based on IP without hitting the DB heavily.
+* Examples: SimpleBloomFilter (utils/bloom_filter.py) used in vote_tag (blueprints/api.py).
+
+ARCHITECTURAL CONSTRAINTS
+
+* Single Database Instance: Operations assume synchronous DB access using SQLAlchemy.
+* In-Memory State: SimpleBloomFilter used for vote limiting is initialized in memory (extensions.py). In a multi-worker environment (like Gunicorn), each worker has its own isolated filter, limiting its effectiveness for true global rate-limiting.
+* Local File Fallbacks: Image uploads default to the local filesystem (static/uploads) if Cloudinary is not configured. This can break across deployments if container file systems are ephemeral (e.g., Render, Heroku).
+
+ANTI-PATTERNS
+
+In-Memory State in Multi-Worker Environment
+* What happens: SimpleBloomFilter in extensions.py is initialized globally, which means each Gunicorn worker process has its own isolated memory copy of the filter.
+* Why it's wrong: IP blocking or vote limiting works per-worker. A user might successfully vote multiple times depending on which worker handles their request.
+* Do this instead: Use a centralized cache like Redis (since Flask-Caching is already included, though configured as SimpleCache currently) to track IP limits.
+
+ERROR HANDLING
+
+Strategy: Basic exception catching and HTTP error returns.
+Patterns:
+* Try-except blocks for image processing and external API calls (utils/image_handler.py).
+* Use of db.get_or_404() in route handlers to gracefully handle missing entities (blueprints/api.py).
+
+CROSS-CUTTING CONCERNS
+
+Authentication: Handled consistently via @login_required decorators from Flask-Login across admin and sensitive API endpoints.
+Caching: Uses Flask-Caching with a SimpleCache backend, primarily for the /api/trending endpoint (blueprints/api.py).
+
+---
+Architecture analysis: 2024-05-23

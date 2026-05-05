@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="flex flex-col items-center justify-center min-h-[70vh]" x-data="{ showPassword: false }">
+    <div class="glass w-full max-w-md p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+        <!-- Subtle Glow -->
+        <div class="absolute -top-10 -right-10 w-32 h-32 bg-digital-lavender opacity-20 blur-3xl"></div>
+        
+        <div class="text-center mb-8">
+            <div class="inline-block p-4 bg-white/30 rounded-3xl mb-4 backdrop-blur-sm">
+                <span class="text-4xl">🔐</span>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-800 dark:text-white mb-2">Volunteer Portal</h1>
+            <p class="text-gray-500 dark:text-gray-300">Access mission control for Campus Companions</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="mb-6 p-4 rounded-3xl {% if category == 'error' %}bg-hyper-coral/20 text-red-600 border border-hyper-coral/30{% else %}bg-neo-mint/20 text-green-700 border border-neo-mint/30{% endif %} flex items-center space-x-3 animate-pulse">
+                        <span>{% if category == 'error' %}⚠️{% else %}✅{% endif %}</span>
+                        <span class="font-semibold text-sm">{{ message }}</span>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('auth.login') }}" class="space-y-6">
+            <div class="space-y-2">
+                <label class="block text-sm font-bold text-gray-600 dark:text-gray-400 ml-4">Username</label>
+                <input type="text" name="username" required
+                       class="w-full px-6 py-4 bg-white/40 border border-white/50 rounded-3xl focus:ring-4 focus:ring-digital-lavender/30 focus:border-digital-lavender outline-none transition-all placeholder-gray-400 dark:bg-black/20"
+                       placeholder="e.g. admin_volunteer">
+            </div>
+
+            <div class="space-y-2" x-data="{ remember: false }">
+                <label class="block text-sm font-bold text-gray-600 dark:text-gray-400 ml-4">Password</label>
+                <div class="relative">
+                    <input :type="showPassword ? 'text' : 'password'" name="password" required
+                           class="w-full px-6 py-4 bg-white/40 border border-white/50 rounded-3xl focus:ring-4 focus:ring-digital-lavender/30 focus:border-digital-lavender outline-none transition-all dark:bg-black/20"
+                           placeholder="••••••••">
+                    <button type="button" @click="showPassword = !showPassword"
+                            class="absolute right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-white/30 rounded-2xl transition">
+                        <span x-show="!showPassword" class="text-lg">👁️</span>
+                        <span x-show="showPassword" class="text-lg">🙈</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between ml-2">
+                <label class="flex items-center space-x-3 cursor-pointer group">
+                    <div class="relative">
+                        <input type="checkbox" name="remember" class="sr-only" x-model="remember">
+                        <div class="w-10 h-6 bg-gray-300 rounded-full shadow-inner transition group-hover:bg-gray-400"
+                             :class="{ 'bg-neo-mint': remember }"></div>
+                        <div class="absolute left-1 top-1 bg-white w-4 h-4 rounded-full shadow transition-transform"
+                             :class="{ 'translate-x-4': remember }"></div>
+                    </div>
+                    <span class="text-sm font-bold text-gray-500 dark:text-gray-400">Remember Me</span>
+                </label>
+            </div>
+
+            <button type="submit" 
+                    class="w-full py-4 bg-digital-lavender text-white font-bold rounded-3xl shadow-[0_10px_20px_-5px_rgba(168,154,205,0.4)] hover:shadow-[0_15px_25px_-5px_rgba(168,154,205,0.6)] hover:-translate-y-1 active:scale-95 transition-all duration-300">
+                Unlock Dashboard
+            </button>
+        </form>
+
+        <div class="mt-8 pt-8 border-t border-white/20 text-center">
+            <p class="text-xs text-gray-400 font-medium">Built with ❤️ for NSAC Volunteers at NUST</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

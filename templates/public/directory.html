@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div x-data="{ 
+    search: '',
+    filter: 'All',
+    animals: [
+        {% for animal in animals %}
+        {
+            id: {{ animal.id }},
+            name: '{{ animal.name }}',
+            sector: '{{ animal.sector }}',
+            tags: '{{ animal.personality_tags }}',
+            mood: '{{ animal.mood }}',
+            image: '{{ animal.image_url or '' }}',
+            url: '{{ url_for('public.animal_detail', animal_id=animal.id) }}'
+        },
+        {% endfor %}
+    ],
+    get filteredAnimals() {
+        return this.animals.filter(i => {
+            const matchesSearch = i.name.toLowerCase().includes(this.search.toLowerCase()) || 
+                                i.tags.toLowerCase().includes(this.search.toLowerCase());
+            const matchesFilter = this.filter === 'All' || i.sector === this.filter;
+            return matchesSearch && matchesFilter;
+        })
+    }
+}">
+    <!-- Header & Search -->
+    <div class="mb-10">
+        <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-6">Campus Encyclopedia 📖</h1>
+        
+        <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+            <div class="relative flex-grow">
+                <input type="text" x-model="search" placeholder="Search by name or trait (e.g. 'Playful')..." 
+                       class="w-full pl-14 pr-6 py-5 glass rounded-[2rem] focus:ring-4 focus:ring-digital-lavender/30 outline-none transition-all font-medium text-lg">
+                <span class="absolute left-6 top-1/2 -translate-y-1/2 text-2xl">🔍</span>
+            </div>
+            
+            <div class="flex space-x-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+                <template x-for="f in ['All', 'C1', 'C2', 'NBS', 'SEECS', 'SADA', 'SMME', 'Retro']">
+                    <button @click="filter = f" 
+                            :class="filter === f ? 'bg-digital-lavender text-white shadow-lg shadow-lavender-200' : 'glass text-gray-500 hover:text-gray-700'"
+                            class="px-6 py-3 rounded-2xl font-bold text-sm transition-all whitespace-nowrap"
+                            x-text="f"></button>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <template x-for="animal in filteredAnimals" :key="animal.id">
+            <a :href="animal.url" 
+               class="glass p-4 rounded-[2.5rem] flex flex-col hover:shadow-xl transition-all duration-300 group hover:-translate-y-1">
+                <div class="relative h-48 w-full rounded-[2rem] overflow-hidden mb-4 bg-gray-100">
+                    <template x-if="animal.image">
+                        <img :src="animal.image" :alt="animal.name" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                    </template>
+                    <template x-if="!animal.image">
+                        <div class="w-full h-full flex items-center justify-center text-5xl opacity-50">🐾</div>
+                    </template>
+                </div>
+                
+                <div class="px-2">
+                    <div class="flex items-center justify-between mb-1">
+                        <h3 class="text-xl font-bold text-gray-800 dark:text-white" x-text="animal.name"></h3>
+                        <span class="text-[10px] font-bold text-gray-400 uppercase" x-text="animal.sector"></span>
+                    </div>
+                    <p class="text-sm text-gray-500 line-clamp-1 italic" x-text="animal.tags"></p>
+                </div>
+            </a>
+        </template>
+    </div>
+
+    <!-- Empty State -->
+    <div x-show="filteredAnimals.length === 0" class="py-20 text-center glass rounded-[3rem]">
+        <span class="text-6xl mb-4 block">🔍</span>
+        <h3 class="text-xl font-bold text-gray-800">No companions found</h3>
+        <p class="text-gray-500">Try adjusting your search or filters.</p>
+    </div>
+</div>
+{% endblock %}

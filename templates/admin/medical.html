@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-10 flex items-center justify-between">
+    <a href="{{ url_for('admin.panel') }}" class="inline-flex items-center space-x-2 text-gray-500 font-bold hover:text-digital-lavender transition group">
+        <span class="p-2 glass rounded-xl group-hover:-translate-x-1 transition">⬅️</span>
+        <span>Back to Panel</span>
+    </a>
+    <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Medical Case Manager 🩹</h1>
+</div>
+
+<div class="glass rounded-[3rem] overflow-hidden shadow-xl">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-white/30 backdrop-blur-sm border-b border-white/20">
+                    <th class="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Animal</th>
+                    <th class="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Condition</th>
+                    <th class="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
+                    <th class="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Cost</th>
+                    <th class="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Timeline</th>
+                    <th class="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-white/10">
+                {% for log in logs %}
+                <tr class="hover:bg-white/20 transition duration-150 group">
+                    <td class="px-8 py-6">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-gray-100 rounded-xl overflow-hidden shadow-inner">
+                                {% if log.animal.image_url %}
+                                    <img src="{{ log.animal.image_url }}" class="w-full h-full object-cover">
+                                {% else %}
+                                    <div class="w-full h-full flex items-center justify-center text-xl">🐾</div>
+                                {% endif %}
+                            </div>
+                            <span class="font-bold text-gray-800 dark:text-white">{{ log.animal.name }}</span>
+                        </div>
+                    </td>
+                    <td class="px-8 py-6">
+                        <span class="text-sm font-medium text-gray-600 dark:text-gray-300 line-clamp-1 max-w-[200px]">{{ log.description }}</span>
+                    </td>
+                    <td class="px-8 py-6">
+                        {% if log.status == 'open' %}
+                            <span class="bg-red-100 text-red-600 px-3 py-1 rounded-xl text-[10px] font-bold uppercase">Active Case</span>
+                        {% else %}
+                            <span class="bg-neo-mint/20 text-green-700 px-3 py-1 rounded-xl text-[10px] font-bold uppercase">Closed</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-8 py-6 font-bold text-gray-700 dark:text-white">Rs. {{ log.cost }}</td>
+                    <td class="px-8 py-6">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase">Started: {{ log.opened_at.strftime('%d %b %Y') }}</span>
+                        {% if log.closed_at %}
+                            <span class="text-[10px] font-bold text-neo-mint uppercase block">Closed: {{ log.closed_at.strftime('%d %b %Y') }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-8 py-6 text-right">
+                        {% if log.status == 'open' %}
+                            <button class="p-2 glass rounded-xl text-digital-lavender hover:bg-digital-lavender hover:text-white transition group-hover:scale-110">
+                                ✏️
+                            </button>
+                        {% else %}
+                            <button class="p-2 glass rounded-xl opacity-30 cursor-not-allowed">
+                                🔒
+                            </button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
